@@ -1,3 +1,4 @@
+import 'package:diar_tunis/app/routes/app_routes.dart';
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
@@ -46,20 +47,15 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            // Navigate based on user type
             switch (state.user.userType.toLowerCase()) {
               case 'admin':
-                context.go('/admin_dashboard');
+                context.go(AppRoutes.adminHome); // Use constant
                 break;
               case 'host':
-                context.go('/host_dashboard');
+                context.go(AppRoutes.hostHome); // Use constant
                 break;
-              case 'service_provider':
-                context.go('/guest_home'); // For now, service providers use guest interface
-                break;
-              case 'guest':
               default:
-                context.go('/guest_home');
+                context.go(AppRoutes.guestHome); // Use constant
             }
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(

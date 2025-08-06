@@ -1,3 +1,4 @@
+import 'package:diar_tunis/app/routes/app_routes.dart';
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
@@ -31,26 +32,16 @@ class _SplashPageState extends State<SplashPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            // User is authenticated, navigate to appropriate dashboard
-            final userType = state.user.userType.toLowerCase();
-            String route = '/guest_home'; // default
-
-            switch (userType) {
+            switch (state.user.userType.toLowerCase()) {
               case 'admin':
-                route = '/admin_dashboard';
+                context.go(AppRoutes.adminHome);
                 break;
               case 'host':
-                route = '/host_dashboard';
+                context.go(AppRoutes.hostHome);
                 break;
-              case 'service_provider':
-                route = '/guest_home'; // For now, service providers use guest interface
-                break;
-              case 'guest':
               default:
-                route = '/guest_home';
+                context.go(AppRoutes.guestHome);
             }
-
-            context.go(route);
           } else if (state is AuthUnauthenticated) {
             // User is not authenticated, go to login
             context.go('/login');
@@ -79,9 +70,9 @@ class _SplashPageState extends State<SplashPage> {
                       color: AppColors.primary,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // App name
                   Text(
                     'Diar Tunis',
@@ -90,9 +81,9 @@ class _SplashPageState extends State<SplashPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   Text(
                     'Discover authentic Tunisian experiences',
                     style: AppTextStyles.bodyMedium.copyWith(
@@ -100,18 +91,20 @@ class _SplashPageState extends State<SplashPage> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   const SizedBox(height: 48),
-                  
+
                   // Loading indicator
                   const CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   Text(
-                    state is AuthLoading ? 'Checking authentication...' : 'Loading...',
+                    state is AuthLoading
+                        ? 'Checking authentication...'
+                        : 'Loading...',
                     style: AppTextStyles.bodySmall.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
                     ),

@@ -1,6 +1,5 @@
 import 'package:diar_tunis/app/themes/app_theme.dart';
-import 'package:diar_tunis/config/routes/app_router.dart';
-import 'package:diar_tunis/core/auth/auth_guard.dart';
+import 'package:diar_tunis/app/routes/app_router.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:diar_tunis/features/properties/presentation/cubit/properties_cubit.dart';
 import 'package:diar_tunis/injection_container.dart' as di;

@@ -1,9 +1,11 @@
-import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:diar_tunis/app/routes/app_routes.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_event.dart';
-import 'package:diar_tunis/features/authentication/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../features/authentication/presentation/bloc/auth_bloc.dart';
+import '../../features/authentication/presentation/bloc/auth_state.dart';
 
 class AuthGuard extends StatefulWidget {
   final Widget child;
@@ -18,7 +20,7 @@ class _AuthGuardState extends State<AuthGuard> {
   @override
   void initState() {
     super.initState();
-    // Check authentication status when the app starts
+    // Check authentication status when the guard initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuthBloc>().add(AuthCheckRequested());
     });
@@ -26,68 +28,65 @@ class _AuthGuardState extends State<AuthGuard> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
+        final currentLocation = GoRouterState.of(context).uri.toString();
+
         if (state is AuthAuthenticated) {
-          // User is authenticated, navigate to appropriate dashboard based on user type
-          final userType = state.user.userType.toLowerCase();
-          String route = '/guest_home'; // default
-
-          switch (userType) {
-            case 'admin':
-              route = '/admin_dashboard';
-              break;
-            case 'host':
-              route = '/host_dashboard';
-              break;
-            case 'guest':
-            case 'service_customer':
-              route = '/guest_home';
-              break;
-            default:
-              route = '/guest_home';
-          }
-
-          // Only navigate if we're currently on login/register page
-          final currentRoute = GoRouterState.of(context).uri.toString();
-          if (currentRoute == '/login' || 
-              currentRoute == '/register' || 
-              currentRoute == '/' ||
-              currentRoute == '/splash') {
-            context.go(route);
+          // User is authenticated - redirect to appropriate dashboard if on auth pages
+          if (_isAuthRoute(currentLocation)) {
+            _redirectBasedOnUserType(state.user.userType, context);
           }
         } else if (state is AuthUnauthenticated) {
-          // User is not authenticated, navigate to login only if not already there
-          final currentRoute = GoRouterState.of(context).uri.toString();
-          if (currentRoute != '/login' && 
-              currentRoute != '/register' &&
-              currentRoute != '/') {
-            context.go('/login');
+          // User is not authenticated - redirect to login if not on auth pages
+          if (!_isAuthRoute(currentLocation)) {
+            context.go(AppRoutes.login);
           }
         }
       },
-      child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          if (state is AuthLoading && state is! AuthAuthenticated && state is! AuthUnauthenticated) {
-            // Show loading screen while checking authentication
-            return const Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Loading...'),
-                  ],
-                ),
+      builder: (context, state) {
+        if (state is AuthLoading) {
+          return const Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading...'),
+                ],
               ),
-            );
-          }
-          
-          // Return the child widget (the actual page content)
-          return widget.child;
-        },
-      ),
+            ),
+          );
+        }
+
+        // For unauthenticated state, we might still show child if it's a public route
+        // The listener will handle redirection
+        return widget.child;
+      },
     );
+  }
+
+  bool _isAuthRoute(String location) {
+    return location == AppRoutes.login ||
+        location == AppRoutes.register ||
+        location == AppRoutes.splash ||
+        location == AppRoutes.onboarding ||
+        location == AppRoutes.forgotPassword;
+  }
+
+  void _redirectBasedOnUserType(String userType, BuildContext context) {
+    switch (userType.toLowerCase()) {
+      case 'admin':
+        context.go(AppRoutes.adminHome);
+        break;
+      case 'host':
+        context.go(AppRoutes.hostHome);
+        break;
+      case 'guest':
+      case 'service_customer':
+      default:
+        context.go(AppRoutes.guestHome); // This should match your constant
+    }
   }
 }

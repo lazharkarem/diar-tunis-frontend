@@ -1,5 +1,5 @@
+import 'package:diar_tunis/app/routes/app_router.dart';
 import 'package:diar_tunis/app/themes/app_theme.dart';
-import 'package:diar_tunis/config/routes/app_router.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:diar_tunis/injection_container.dart' as di;
 import 'package:flutter/material.dart';
