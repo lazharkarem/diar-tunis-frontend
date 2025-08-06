@@ -1,296 +1,229 @@
-import 'package:diar_tunis/core/errors/exceptions.dart';
+import 'package:diar_tunis/features/admin/data/models/admin_statistics_model.dart';
 import 'package:diar_tunis/features/admin/data/models/property_model.dart';
-import 'package:diar_tunis/features/authentication/data/models/user_model.dart';
-import 'package:dio/dio.dart';
+import 'package:diar_tunis/features/shared/data/models/booking_model.dart';
+import 'package:injectable/injectable.dart'; // ✅ Correct import
+
+import '../../../../core/network/api_service.dart';
+import '../../../shared/data/models/user_model.dart';
 
 abstract class AdminRemoteDataSource {
-  // Users Management
-  Future<List<UserModel>> getAllUsers();
-  Future<UserModel> updateUserStatus(String userId, String status);
-  Future<UserModel> createUser(Map<String, dynamic> userData);
-  Future<UserModel> updateUser(String userId, Map<String, dynamic> userData);
-  Future<void> deleteUser(String userId);
-
-  // Properties Management
-  Future<List<PropertyModel>> getAllProperties();
-  Future<PropertyModel> updatePropertyStatus(String propertyId, String status);
-  Future<PropertyModel> createProperty(Map<String, dynamic> propertyData);
-  Future<PropertyModel> updateProperty(
-    String propertyId,
-    Map<String, dynamic> propertyData,
+  // User Management
+  Future<ApiResponse<PaginatedResponse<UserModel>>> getUsers({
+    int page = 1,
+    int perPage = 15,
+  });
+  Future<ApiResponse<UserModel>> createUser(Map<String, dynamic> userData);
+  Future<ApiResponse<UserModel>> updateUser(
+    int userId,
+    Map<String, dynamic> userData,
   );
-  Future<void> deleteProperty(String propertyId);
+  Future<ApiResponse<void>> deleteUser(int userId);
 
-  // Bookings Management
-  Future<List<Map<String, dynamic>>> getAllBookings();
-  Future<Map<String, dynamic>> updateBookingStatus(
-    String bookingId,
+  // Property Management
+  Future<ApiResponse<PaginatedResponse<PropertyModel>>> getAllProperties({
+    int page = 1,
+    int perPage = 15,
+    String? status,
+  });
+  Future<ApiResponse<PropertyModel>> updatePropertyStatus(
+    int propertyId,
     String status,
   );
-  Future<void> cancelBooking(String bookingId);
+  Future<ApiResponse<void>> deleteProperty(int propertyId);
 
-  // Experiences Management
-  Future<List<Map<String, dynamic>>> getAllExperiences();
-  Future<Map<String, dynamic>> updateExperienceStatus(
-    String experienceId,
-    String status,
-  );
-
-  // Payments Management
-  Future<List<Map<String, dynamic>>> getAllPayments();
-  Future<Map<String, dynamic>> updatePaymentStatus(
-    String paymentId,
+  // Booking Management
+  Future<ApiResponse<PaginatedResponse<BookingModel>>> getAllBookings({
+    int page = 1,
+    int perPage = 15,
+    String? status,
+  });
+  Future<ApiResponse<BookingModel>> updateBookingStatus(
+    int bookingId,
     String status,
   );
 
-  // Service Providers Management
-  Future<List<Map<String, dynamic>>> getAllServiceProviders();
-  Future<Map<String, dynamic>> updateServiceProviderStatus(
-    String providerId,
-    String status,
-  );
-
-  // Statistics & Dashboard
-  Future<Map<String, dynamic>> getDashboardStats();
-  Future<List<Map<String, dynamic>>> getRecentActivities();
+  // Statistics
+  Future<ApiResponse<AdminStatisticsModel>> getStatistics();
 }
 
+@injectable
 class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
-  final Dio dio;
+  final ApiService _apiService;
 
-  AdminRemoteDataSourceImpl({required this.dio});
+  AdminRemoteDataSourceImpl(this._apiService);
 
   @override
-  Future<List<PropertyModel>> getAllProperties() async {
-    try {
-      final response = await dio.get('/admin/properties');
-      final List<dynamic> jsonResponse = response.data;
-      return jsonResponse.map((json) => PropertyModel.fromJson(json)).toList();
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to load properties: ${e.message}');
+  Future<ApiResponse<PaginatedResponse<UserModel>>> getUsers({
+    int page = 1,
+    int perPage = 15,
+  }) async {
+    final response = await _apiService.get<Map<String, dynamic>>(
+      '/admin/users',
+      queryParameters: {'page': page, 'per_page': perPage},
+    );
+
+    if (response.isSuccess && response.data != null) {
+      final paginatedResponse = PaginatedResponse.fromJson(
+        response.data!,
+        (json) => UserModel.fromJson(json),
+      );
+
+      return ApiResponse<PaginatedResponse<UserModel>>(
+        success: true,
+        data: paginatedResponse,
+        message: response.message,
+      );
+    } else {
+      return ApiResponse<PaginatedResponse<UserModel>>(
+        success: false,
+        message: response.message,
+        errors: response.errors,
+      );
     }
   }
 
   @override
-  Future<PropertyModel> updatePropertyStatus(
-    String propertyId,
+  Future<ApiResponse<UserModel>> createUser(
+    Map<String, dynamic> userData,
+  ) async {
+    return await _apiService.post<UserModel>(
+      '/admin/users',
+      data: userData,
+      fromJson: (json) => UserModel.fromJson(json),
+    );
+  }
+
+  @override
+  Future<ApiResponse<UserModel>> updateUser(
+    int userId,
+    Map<String, dynamic> userData,
+  ) async {
+    return await _apiService.put<UserModel>(
+      '/admin/users/$userId',
+      data: userData,
+      fromJson: (json) => UserModel.fromJson(json),
+    );
+  }
+
+  @override
+  Future<ApiResponse<void>> deleteUser(int userId) async {
+    return await _apiService.delete<void>('/admin/users/$userId');
+  }
+
+  @override
+  Future<ApiResponse<PaginatedResponse<PropertyModel>>> getAllProperties({
+    int page = 1,
+    int perPage = 15,
+    String? status,
+  }) async {
+    final queryParameters = <String, dynamic>{
+      'page': page,
+      'per_page': perPage,
+    };
+
+    if (status != null && status.isNotEmpty) {
+      queryParameters['status'] = status;
+    }
+
+    final response = await _apiService.get<Map<String, dynamic>>(
+      '/admin/properties',
+      queryParameters: queryParameters,
+    );
+
+    if (response.isSuccess && response.data != null) {
+      final paginatedResponse = PaginatedResponse.fromJson(
+        response.data!,
+        (json) => PropertyModel.fromJson(json),
+      );
+
+      return ApiResponse<PaginatedResponse<PropertyModel>>(
+        success: true,
+        data: paginatedResponse,
+        message: response.message,
+      );
+    } else {
+      return ApiResponse<PaginatedResponse<PropertyModel>>(
+        success: false,
+        message: response.message,
+        errors: response.errors,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse<PropertyModel>> updatePropertyStatus(
+    int propertyId,
     String status,
   ) async {
-    try {
-      final response = await dio.put(
-        '/admin/properties/$propertyId/status',
-        data: {'status': status},
+    return await _apiService.put<PropertyModel>(
+      '/admin/properties/$propertyId/status',
+      data: {'status': status},
+      fromJson: (json) => PropertyModel.fromJson(json),
+    );
+  }
+
+  @override
+  Future<ApiResponse<void>> deleteProperty(int propertyId) async {
+    return await _apiService.delete<void>('/admin/properties/$propertyId');
+  }
+
+  @override
+  Future<ApiResponse<PaginatedResponse<BookingModel>>> getAllBookings({
+    int page = 1,
+    int perPage = 15,
+    String? status,
+  }) async {
+    final queryParameters = <String, dynamic>{
+      'page': page,
+      'per_page': perPage,
+    };
+
+    if (status != null && status.isNotEmpty) {
+      queryParameters['status'] = status;
+    }
+
+    final response = await _apiService.get<Map<String, dynamic>>(
+      '/admin/bookings',
+      queryParameters: queryParameters,
+    );
+
+    if (response.isSuccess && response.data != null) {
+      final paginatedResponse = PaginatedResponse.fromJson(
+        response.data!,
+        (json) => BookingModel.fromJson(json),
       );
-      return PropertyModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw ServerException(
-        message: 'Failed to update property status: ${e.message}',
+
+      return ApiResponse<PaginatedResponse<BookingModel>>(
+        success: true,
+        data: paginatedResponse,
+        message: response.message,
+      );
+    } else {
+      return ApiResponse<PaginatedResponse<BookingModel>>(
+        success: false,
+        message: response.message,
+        errors: response.errors,
       );
     }
   }
 
   @override
-  Future<List<UserModel>> getAllUsers() async {
-    try {
-      final response = await dio.get('/admin/users');
-      final List<dynamic> jsonResponse = response.data;
-      return jsonResponse.map((json) => UserModel.fromJson(json)).toList();
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to load users: ${e.message}');
-    }
+  Future<ApiResponse<BookingModel>> updateBookingStatus(
+    int bookingId,
+    String status,
+  ) async {
+    return await _apiService.put<BookingModel>(
+      '/admin/bookings/$bookingId/status',
+      data: {'status': status},
+      fromJson: (json) => BookingModel.fromJson(json),
+    );
   }
 
   @override
-  Future<UserModel> updateUserStatus(String userId, String status) async {
-    try {
-      final response = await dio.put(
-        '/admin/users/$userId/status',
-        data: {'status': status},
-      );
-      return UserModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to update user status: ${e.message}');
-    }
-  }
-
-  @override
-  Future<UserModel> createUser(Map<String, dynamic> userData) async {
-    try {
-      final response = await dio.post('/admin/users', data: userData);
-      return UserModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to create user: ${e.message}');
-    }
-  }
-
-  @override
-  Future<UserModel> updateUser(String userId, Map<String, dynamic> userData) async {
-    try {
-      final response = await dio.put('/admin/users/$userId', data: userData);
-      return UserModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to update user: ${e.message}');
-    }
-  }
-
-  @override
-  Future<void> deleteUser(String userId) async {
-    try {
-      await dio.delete('/admin/users/$userId');
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to delete user: ${e.message}');
-    }
-  }
-
-  @override
-  Future<PropertyModel> createProperty(Map<String, dynamic> propertyData) async {
-    try {
-      final response = await dio.post('/admin/properties', data: propertyData);
-      return PropertyModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to create property: ${e.message}');
-    }
-  }
-
-  @override
-  Future<PropertyModel> updateProperty(String propertyId, Map<String, dynamic> propertyData) async {
-    try {
-      final response = await dio.put('/admin/properties/$propertyId', data: propertyData);
-      return PropertyModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to update property: ${e.message}');
-    }
-  }
-
-  @override
-  Future<void> deleteProperty(String propertyId) async {
-    try {
-      await dio.delete('/admin/properties/$propertyId');
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to delete property: ${e.message}');
-    }
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> getAllBookings() async {
-    try {
-      final response = await dio.get('/admin/bookings');
-      return List<Map<String, dynamic>>.from(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to load bookings: ${e.message}');
-    }
-  }
-
-  @override
-  Future<Map<String, dynamic>> updateBookingStatus(String bookingId, String status) async {
-    try {
-      final response = await dio.put(
-        '/admin/bookings/$bookingId/status',
-        data: {'status': status},
-      );
-      return response.data;
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to update booking status: ${e.message}');
-    }
-  }
-
-  @override
-  Future<void> cancelBooking(String bookingId) async {
-    try {
-      await dio.put(
-        '/admin/bookings/$bookingId/cancel',
-      );
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to cancel booking: ${e.message}');
-    }
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> getAllExperiences() async {
-    try {
-      final response = await dio.get('/admin/experiences');
-      return List<Map<String, dynamic>>.from(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to load experiences: ${e.message}');
-    }
-  }
-
-  @override
-  Future<Map<String, dynamic>> updateExperienceStatus(String experienceId, String status) async {
-    try {
-      final response = await dio.put(
-        '/admin/experiences/$experienceId/status',
-        data: {'status': status},
-      );
-      return response.data;
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to update experience status: ${e.message}');
-    }
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> getAllPayments() async {
-    try {
-      final response = await dio.get('/admin/payments');
-      return List<Map<String, dynamic>>.from(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to load payments: ${e.message}');
-    }
-  }
-
-  @override
-  Future<Map<String, dynamic>> updatePaymentStatus(String paymentId, String status) async {
-    try {
-      final response = await dio.put(
-        '/admin/payments/$paymentId/status',
-        data: {'status': status},
-      );
-      return response.data;
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to update payment status: ${e.message}');
-    }
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> getAllServiceProviders() async {
-    try {
-      final response = await dio.get('/admin/service-providers');
-      return List<Map<String, dynamic>>.from(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to load service providers: ${e.message}');
-    }
-  }
-
-  @override
-  Future<Map<String, dynamic>> updateServiceProviderStatus(String providerId, String status) async {
-    try {
-      final response = await dio.put(
-        '/admin/service-providers/$providerId/status',
-        data: {'status': status},
-      );
-      return response.data;
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to update service provider status: ${e.message}');
-    }
-  }
-
-  @override
-  Future<Map<String, dynamic>> getDashboardStats() async {
-    try {
-      final response = await dio.get('/admin/dashboard/stats');
-      return response.data;
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to load dashboard stats: ${e.message}');
-    }
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> getRecentActivities() async {
-    try {
-      final response = await dio.get('/admin/dashboard/activities');
-      return List<Map<String, dynamic>>.from(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: 'Failed to load recent activities: ${e.message}');
-    }
+  Future<ApiResponse<AdminStatisticsModel>> getStatistics() async {
+    return await _apiService.get<AdminStatisticsModel>(
+      '/admin/statistics',
+      fromJson: (json) => AdminStatisticsModel.fromJson(json),
+    );
   }
 }

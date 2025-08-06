@@ -1,313 +1,308 @@
-import 'package:dartz/dartz.dart';
-import 'package:diar_tunis/core/errors/exceptions.dart';
-import 'package:diar_tunis/core/errors/failures.dart';
-import 'package:diar_tunis/core/network/network_info.dart';
+import 'package:diar_tunis/core/network/api_service.dart';
 import 'package:diar_tunis/features/admin/data/datasources/admin_remote_datasource.dart';
+import 'package:diar_tunis/features/admin/domain/entities/admin_statistics.dart';
+import 'package:diar_tunis/features/admin/domain/entities/booking.dart';
 import 'package:diar_tunis/features/admin/domain/entities/property.dart';
 import 'package:diar_tunis/features/admin/domain/repositories/admin_repository.dart';
 import 'package:diar_tunis/features/authentication/domain/entities/user.dart';
+import 'package:injectable/injectable.dart';
 
-class AdminRepositoryImpl implements AdminRepository {
-  final AdminRemoteDataSource remoteDataSource;
-  final NetworkInfo networkInfo;
+@injectable
+abstract class AdminRepositoryImpl implements AdminRepository {
+  final AdminRemoteDataSource _remoteDataSource;
 
-  AdminRepositoryImpl({
-    required this.remoteDataSource,
-    required this.networkInfo,
-  });
+  AdminRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<Either<Failure, List<Property>>> getAllProperties() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final properties = await remoteDataSource.getAllProperties();
-        return Right(properties);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+  Future<ApiResponse<PaginatedResponse<User>>> getUsers({
+    int page = 1,
+    int perPage = 15,
+  }) async {
+    try {
+      final response = await _remoteDataSource.getUsers(
+        page: page,
+        perPage: perPage,
+      );
+
+      if (response.isSuccess && response.data != null) {
+        final paginatedResponse = PaginatedResponse<User>(
+          data: response.data!.data.map((model) => model.toDomain()).toList(),
+          currentPage: response.data!.currentPage,
+          lastPage: response.data!.lastPage,
+          total: response.data!.total,
+          perPage: response.data!.perPage,
+        );
+
+        return ApiResponse<PaginatedResponse<User>>(
+          success: true,
+          data: paginatedResponse,
+          message: response.message,
+        );
+      } else {
+        return ApiResponse<PaginatedResponse<User>>(
+          success: false,
+          message: response.message,
+          errors: response.errors,
+        );
       }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+    } catch (e) {
+      return ApiResponse<PaginatedResponse<User>>(
+        success: false,
+        message: 'Failed to get users: ${e.toString()}',
+      );
     }
   }
 
   @override
-  Future<Either<Failure, Property>> updatePropertyStatus(String propertyId, String status) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final property = await remoteDataSource.updatePropertyStatus(propertyId, status);
-        return Right(property);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+  Future<ApiResponse<User>> createUser(Map<String, dynamic> userData) async {
+    try {
+      final response = await _remoteDataSource.createUser(userData);
+
+      if (response.isSuccess && response.data != null) {
+        return ApiResponse<User>(
+          success: true,
+          data: response.data!.toDomain(),
+          message: response.message,
+        );
+      } else {
+        return ApiResponse<User>(
+          success: false,
+          message: response.message,
+          errors: response.errors,
+        );
       }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+    } catch (e) {
+      return ApiResponse<User>(
+        success: false,
+        message: 'Failed to create user: ${e.toString()}',
+      );
     }
   }
 
   @override
-  Future<Either<Failure, List<User>>> getAllUsers() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final users = await remoteDataSource.getAllUsers();
-        return Right(users);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+  Future<ApiResponse<User>> updateUser(
+    int userId,
+    Map<String, dynamic> userData,
+  ) async {
+    try {
+      final response = await _remoteDataSource.updateUser(userId, userData);
+
+      if (response.isSuccess && response.data != null) {
+        return ApiResponse<User>(
+          success: true,
+          data: response.data!.toDomain(),
+          message: response.message,
+        );
+      } else {
+        return ApiResponse<User>(
+          success: false,
+          message: response.message,
+          errors: response.errors,
+        );
       }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+    } catch (e) {
+      return ApiResponse<User>(
+        success: false,
+        message: 'Failed to update user: ${e.toString()}',
+      );
     }
   }
 
   @override
-  Future<Either<Failure, User>> updateUserStatus(String userId, String status) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final user = await remoteDataSource.updateUserStatus(userId, status);
-        return Right(user);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+  Future<ApiResponse<void>> deleteUser(int userId) async {
+    try {
+      return await _remoteDataSource.deleteUser(userId);
+    } catch (e) {
+      return ApiResponse<void>(
+        success: false,
+        message: 'Failed to delete user: ${e.toString()}',
+      );
     }
   }
 
   @override
-  Future<Either<Failure, User>> createUser(Map<String, dynamic> userData) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final user = await remoteDataSource.createUser(userData);
-        return Right(user);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+  Future<ApiResponse<PaginatedResponse<Property>>> getAllProperties({
+    int page = 1,
+    int perPage = 15,
+    String? status,
+  }) async {
+    try {
+      final response = await _remoteDataSource.getAllProperties(
+        page: page,
+        perPage: perPage,
+        status: status,
+      );
+
+      if (response.isSuccess && response.data != null) {
+        final paginatedResponse = PaginatedResponse<Property>(
+          data: response.data!.data.map((model) => model.toDomain()).toList(),
+          currentPage: response.data!.currentPage,
+          lastPage: response.data!.lastPage,
+          total: response.data!.total,
+          perPage: response.data!.perPage,
+        );
+
+        return ApiResponse<PaginatedResponse<Property>>(
+          success: true,
+          data: paginatedResponse,
+          message: response.message,
+        );
+      } else {
+        return ApiResponse<PaginatedResponse<Property>>(
+          success: false,
+          message: response.message,
+          errors: response.errors,
+        );
       }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+    } catch (e) {
+      return ApiResponse<PaginatedResponse<Property>>(
+        success: false,
+        message: 'Failed to get properties: ${e.toString()}',
+      );
     }
   }
 
   @override
-  Future<Either<Failure, User>> updateUser(String userId, Map<String, dynamic> userData) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final user = await remoteDataSource.updateUser(userId, userData);
-        return Right(user);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+  Future<ApiResponse<Property>> updatePropertyStatus(
+    int propertyId,
+    String status,
+  ) async {
+    try {
+      final response = await _remoteDataSource.updatePropertyStatus(
+        propertyId,
+        status,
+      );
+
+      if (response.isSuccess && response.data != null) {
+        return ApiResponse<Property>(
+          success: true,
+          data: response.data!.toDomain(),
+          message: response.message,
+        );
+      } else {
+        return ApiResponse<Property>(
+          success: false,
+          message: response.message,
+          errors: response.errors,
+        );
       }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+    } catch (e) {
+      return ApiResponse<Property>(
+        success: false,
+        message: 'Failed to update property status: ${e.toString()}',
+      );
     }
   }
 
   @override
-  Future<Either<Failure, void>> deleteUser(String userId) async {
-    if (await networkInfo.isConnected) {
-      try {
-        await remoteDataSource.deleteUser(userId);
-        return const Right(null);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+  Future<ApiResponse<void>> deleteProperty(int propertyId) async {
+    try {
+      return await _remoteDataSource.deleteProperty(propertyId);
+    } catch (e) {
+      return ApiResponse<void>(
+        success: false,
+        message: 'Failed to delete property: ${e.toString()}',
+      );
     }
   }
 
   @override
-  Future<Either<Failure, Property>> createProperty(Map<String, dynamic> propertyData) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final property = await remoteDataSource.createProperty(propertyData);
-        return Right(property);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+  Future<ApiResponse<PaginatedResponse<Booking>>> getAllBookings({
+    int page = 1,
+    int perPage = 15,
+    String? status,
+  }) async {
+    try {
+      final response = await _remoteDataSource.getAllBookings(
+        page: page,
+        perPage: perPage,
+        status: status,
+      );
+
+      if (response.isSuccess && response.data != null) {
+        final paginatedResponse = PaginatedResponse<Booking>(
+          data: response.data!.data.map((model) => model.toDomain()).toList(),
+          currentPage: response.data!.currentPage,
+          lastPage: response.data!.lastPage,
+          total: response.data!.total,
+          perPage: response.data!.perPage,
+        );
+
+        return ApiResponse<PaginatedResponse<Booking>>(
+          success: true,
+          data: paginatedResponse,
+          message: response.message,
+        );
+      } else {
+        return ApiResponse<PaginatedResponse<Booking>>(
+          success: false,
+          message: response.message,
+          errors: response.errors,
+        );
       }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+    } catch (e) {
+      return ApiResponse<PaginatedResponse<Booking>>(
+        success: false,
+        message: 'Failed to get bookings: ${e.toString()}',
+      );
     }
   }
 
   @override
-  Future<Either<Failure, Property>> updateProperty(String propertyId, Map<String, dynamic> propertyData) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final property = await remoteDataSource.updateProperty(propertyId, propertyData);
-        return Right(property);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+  Future<ApiResponse<Booking>> updateBookingStatus(
+    int bookingId,
+    String status,
+  ) async {
+    try {
+      final response = await _remoteDataSource.updateBookingStatus(
+        bookingId,
+        status,
+      );
+
+      if (response.isSuccess && response.data != null) {
+        return ApiResponse<Booking>(
+          success: true,
+          data: response.data!.toDomain(),
+          message: response.message,
+        );
+      } else {
+        return ApiResponse<Booking>(
+          success: false,
+          message: response.message,
+          errors: response.errors,
+        );
       }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+    } catch (e) {
+      return ApiResponse<Booking>(
+        success: false,
+        message: 'Failed to update booking status: ${e.toString()}',
+      );
     }
   }
 
   @override
-  Future<Either<Failure, void>> deleteProperty(String propertyId) async {
-    if (await networkInfo.isConnected) {
-      try {
-        await remoteDataSource.deleteProperty(propertyId);
-        return const Right(null);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+  Future<ApiResponse<AdminStatistics>> getStatistics() async {
+    try {
+      final response = await _remoteDataSource.getStatistics();
+
+      if (response.isSuccess && response.data != null) {
+        return ApiResponse<AdminStatistics>(
+          success: true,
+          data: response.data!.toDomain(),
+          message: response.message,
+        );
+      } else {
+        return ApiResponse<AdminStatistics>(
+          success: false,
+          message: response.message,
+          errors: response.errors,
+        );
       }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+    } catch (e) {
+      return ApiResponse<AdminStatistics>(
+        success: false,
+        message: 'Failed to get statistics: ${e.toString()}',
+      );
     }
   }
-
-  @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getAllBookings() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final bookings = await remoteDataSource.getAllBookings();
-        return Right(bookings);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, Map<String, dynamic>>> updateBookingStatus(String bookingId, String status) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final booking = await remoteDataSource.updateBookingStatus(bookingId, status);
-        return Right(booking);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> cancelBooking(String bookingId) async {
-    if (await networkInfo.isConnected) {
-      try {
-        await remoteDataSource.cancelBooking(bookingId);
-        return const Right(null);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getAllExperiences() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final experiences = await remoteDataSource.getAllExperiences();
-        return Right(experiences);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, Map<String, dynamic>>> updateExperienceStatus(String experienceId, String status) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final experience = await remoteDataSource.updateExperienceStatus(experienceId, status);
-        return Right(experience);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getAllPayments() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final payments = await remoteDataSource.getAllPayments();
-        return Right(payments);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, Map<String, dynamic>>> updatePaymentStatus(String paymentId, String status) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final payment = await remoteDataSource.updatePaymentStatus(paymentId, status);
-        return Right(payment);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getAllServiceProviders() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final providers = await remoteDataSource.getAllServiceProviders();
-        return Right(providers);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, Map<String, dynamic>>> updateServiceProviderStatus(String providerId, String status) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final provider = await remoteDataSource.updateServiceProviderStatus(providerId, status);
-        return Right(provider);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, Map<String, dynamic>>> getDashboardStats() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final stats = await remoteDataSource.getDashboardStats();
-        return Right(stats);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getRecentActivities() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final activities = await remoteDataSource.getRecentActivities();
-        return Right(activities);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
-    }
-  }  
 }
-
