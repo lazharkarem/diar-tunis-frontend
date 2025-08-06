@@ -27,6 +27,26 @@ class PropertyModel extends Property {
 
   Map<String, dynamic> toJson() => _$PropertyModelToJson(this);
 
+  // Convert data model to domain entity
+  Property toDomain() {
+    return Property(
+      id: id,
+      title: title,
+      description: description,
+      location: location,
+      price: price,
+      images: images,
+      type: type,
+      bedrooms: bedrooms,
+      bathrooms: bathrooms,
+      area: area,
+      amenities: amenities,
+      status: status,
+      hostId: hostId,
+      createdAt: createdAt,
+    );
+  }
+
   factory PropertyModel.fromEntity(Property property) {
     return PropertyModel(
       id: property.id,

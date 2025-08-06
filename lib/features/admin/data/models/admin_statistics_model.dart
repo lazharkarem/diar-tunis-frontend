@@ -1,26 +1,25 @@
+import 'package:diar_tunis/features/admin/domain/entities/admin_statistics.dart';
 import 'package:equatable/equatable.dart';
 
 class AdminStatisticsModel extends Equatable {
   final int totalUsers;
   final int totalProperties;
   final int totalBookings;
-  final int totalServiceProviders;
-  final int totalAppointments;
   final double totalRevenue;
-  final int pendingBookings;
+  final int activeUsers;
   final int pendingProperties;
-  final int pendingProviders;
+  final Map<String, dynamic> monthlyStats;
+  final List<Map<String, dynamic>> recentActivities;
 
   const AdminStatisticsModel({
     required this.totalUsers,
     required this.totalProperties,
     required this.totalBookings,
-    required this.totalServiceProviders,
-    required this.totalAppointments,
     required this.totalRevenue,
-    required this.pendingBookings,
+    required this.activeUsers,
     required this.pendingProperties,
-    required this.pendingProviders,
+    required this.monthlyStats,
+    required this.recentActivities,
   });
 
   factory AdminStatisticsModel.fromJson(Map<String, dynamic> json) {
@@ -28,12 +27,15 @@ class AdminStatisticsModel extends Equatable {
       totalUsers: json['total_users'] ?? 0,
       totalProperties: json['total_properties'] ?? 0,
       totalBookings: json['total_bookings'] ?? 0,
-      totalServiceProviders: json['total_service_providers'] ?? 0,
-      totalAppointments: json['total_appointments'] ?? 0,
       totalRevenue: (json['total_revenue'] as num?)?.toDouble() ?? 0.0,
-      pendingBookings: json['pending_bookings'] ?? 0,
+      activeUsers: json['active_users'] ?? 0,
       pendingProperties: json['pending_properties'] ?? 0,
-      pendingProviders: json['pending_providers'] ?? 0,
+      monthlyStats: json['monthly_stats'] ?? {},
+      recentActivities:
+          (json['recent_activities'] as List<dynamic>?)
+              ?.map((item) => item as Map<String, dynamic>)
+              .toList() ??
+          [],
     );
   }
 
@@ -42,13 +44,26 @@ class AdminStatisticsModel extends Equatable {
       'total_users': totalUsers,
       'total_properties': totalProperties,
       'total_bookings': totalBookings,
-      'total_service_providers': totalServiceProviders,
-      'total_appointments': totalAppointments,
       'total_revenue': totalRevenue,
-      'pending_bookings': pendingBookings,
+      'active_users': activeUsers,
       'pending_properties': pendingProperties,
-      'pending_providers': pendingProviders,
+      'monthly_stats': monthlyStats,
+      'recent_activities': recentActivities,
     };
+  }
+
+  // Convert data model to domain entity
+  AdminStatistics toDomain() {
+    return AdminStatistics(
+      totalUsers: totalUsers,
+      totalProperties: totalProperties,
+      totalBookings: totalBookings,
+      totalRevenue: totalRevenue,
+      activeUsers: activeUsers,
+      pendingProperties: pendingProperties,
+      monthlyStats: monthlyStats,
+      recentActivities: recentActivities,
+    );
   }
 
   @override
@@ -56,11 +71,10 @@ class AdminStatisticsModel extends Equatable {
     totalUsers,
     totalProperties,
     totalBookings,
-    totalServiceProviders,
-    totalAppointments,
     totalRevenue,
-    pendingBookings,
+    activeUsers,
     pendingProperties,
-    pendingProviders,
+    monthlyStats,
+    recentActivities,
   ];
 }

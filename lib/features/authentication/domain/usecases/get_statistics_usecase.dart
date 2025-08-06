@@ -1,17 +1,16 @@
 import 'package:dartz/dartz.dart';
 import 'package:diar_tunis/core/errors/failures.dart';
-import 'package:diar_tunis/features/authentication/domain/entities/user.dart';
 import 'package:diar_tunis/features/authentication/domain/repositories/auth_repository.dart';
 import 'package:diar_tunis/features/authentication/domain/usecases/usecase.dart';
 
-class GetProfileUseCase implements UseCase<User, NoParams> {
+class GetStatisticsUseCase implements UseCase<Map<String, dynamic>, NoParams> {
   final AuthRepository repository;
 
-  GetProfileUseCase(this.repository);
+  GetStatisticsUseCase(this.repository);
 
   @override
-  Future<Either<Failure, User>> call(NoParams params) async {
-    return await repository.getProfile();
+  Future<Either<Failure, Map<String, dynamic>>> call(NoParams params) async {
+    return await repository.getStatistics();
   }
 }
 

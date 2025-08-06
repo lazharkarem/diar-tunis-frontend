@@ -1,9 +1,8 @@
-import 'package:dagger/dagger.dart';
+import 'package:diar_tunis/features/admin/data/models/property_model.dart';
+import 'package:diar_tunis/features/shared/data/models/destination_model.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/network/api_service.dart';
-import '../models/category_model.dart';
-import '../models/destination_model.dart';
-import '../models/property_model.dart';
 
 abstract class PropertyRemoteDataSource {
   Future<ApiResponse<PaginatedResponse<PropertyModel>>> getProperties({

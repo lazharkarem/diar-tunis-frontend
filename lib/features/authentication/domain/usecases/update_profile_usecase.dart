@@ -5,19 +5,16 @@ import 'package:diar_tunis/features/authentication/domain/repositories/auth_repo
 import 'package:diar_tunis/features/authentication/domain/usecases/usecase.dart';
 import 'package:equatable/equatable.dart';
 
-class RegisterUseCase implements UseCase<User, RegisterParams> {
+class UpdateProfileUseCase implements UseCase<User, UpdateProfileParams> {
   final AuthRepository repository;
 
-  RegisterUseCase(this.repository);
+  UpdateProfileUseCase(this.repository);
 
   @override
-  Future<Either<Failure, User>> call(RegisterParams params) async {
-    return await repository.register(
+  Future<Either<Failure, User>> call(UpdateProfileParams params) async {
+    return await repository.updateProfile(
       name: params.name,
       email: params.email,
-      password: params.password,
-      confirmPassword: params.confirmPassword,
-      userType: params.userType,
       phone: params.phone,
       address: params.address,
       businessName: params.businessName,
@@ -28,12 +25,9 @@ class RegisterUseCase implements UseCase<User, RegisterParams> {
   }
 }
 
-class RegisterParams extends Equatable {
-  final String name;
-  final String email;
-  final String password;
-  final String confirmPassword;
-  final String userType;
+class UpdateProfileParams extends Equatable {
+  final String? name;
+  final String? email;
   final String? phone;
   final String? address;
   final String? businessName;
@@ -41,12 +35,9 @@ class RegisterParams extends Equatable {
   final String? licenseNumber;
   final int? yearsOfExperience;
 
-  const RegisterParams({
-    required this.name,
-    required this.email,
-    required this.password,
-    required this.confirmPassword,
-    required this.userType,
+  const UpdateProfileParams({
+    this.name,
+    this.email,
     this.phone,
     this.address,
     this.businessName,
@@ -59,9 +50,6 @@ class RegisterParams extends Equatable {
   List<Object?> get props => [
     name,
     email,
-    password,
-    confirmPassword,
-    userType,
     phone,
     address,
     businessName,

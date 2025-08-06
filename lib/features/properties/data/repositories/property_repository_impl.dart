@@ -1,10 +1,7 @@
-import 'package:dagger/dagger.dart';
+import 'package:diar_tunis/features/admin/domain/entities/property.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/network/api_service.dart';
-import '../../domain/entities/category.dart';
-import '../../domain/entities/destination.dart';
-import '../../domain/entities/property.dart';
-import '../../domain/repositories/property_repository.dart';
 import '../datasources/property_remote_datasource.dart';
 
 @injectable

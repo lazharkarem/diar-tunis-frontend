@@ -1,3 +1,4 @@
+import 'package:diar_tunis/features/admin/domain/entities/booking.dart';
 import 'package:diar_tunis/features/shared/data/models/property_model.dart';
 import 'package:diar_tunis/features/shared/data/models/user_model.dart';
 import 'package:equatable/equatable.dart';
@@ -65,6 +66,21 @@ class BookingModel extends Equatable {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
+  }
+
+  // Convert data model to domain entity
+  Booking toDomain() {
+    return Booking(
+      id: id.toString(),
+      userId: userId.toString(),
+      propertyId: propertyId.toString(),
+      startDate: checkIn,
+      endDate: checkOut,
+      numberOfGuests: guests,
+      totalPrice: totalAmount,
+      status: status,
+      createdAt: createdAt,
+    );
   }
 
   int get nights => checkOut.difference(checkIn).inDays;

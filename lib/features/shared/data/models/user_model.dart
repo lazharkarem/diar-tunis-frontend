@@ -1,3 +1,4 @@
+import 'package:diar_tunis/features/authentication/domain/entities/user.dart';
 import 'package:equatable/equatable.dart';
 
 class UserModel extends Equatable {
@@ -59,6 +60,26 @@ class UserModel extends Equatable {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
+  }
+
+  // Convert data model to domain entity
+  User toDomain() {
+    final nameParts = name.split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : name;
+    final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
+    return User(
+      id: id.toString(),
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+      phone: profile?.phone,
+      avatar: profile?.avatar,
+      userType: userType,
+      isVerified: emailVerifiedAt != null,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
   }
 
   bool get isGuest => userType == 'guest';

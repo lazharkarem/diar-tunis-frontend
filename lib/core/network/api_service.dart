@@ -269,6 +269,19 @@ class ApiResponse<T> {
     this.errors,
   });
 
+  // Factory constructor for success responses
+  factory ApiResponse.success({T? data, String message = ''}) {
+    return ApiResponse<T>(success: true, data: data, message: message);
+  }
+
+  // Factory constructor for error responses
+  factory ApiResponse.error({
+    String message = 'An error occurred',
+    Map<String, dynamic>? errors,
+  }) {
+    return ApiResponse<T>(success: false, message: message, errors: errors);
+  }
+
   bool get isSuccess => success;
   bool get isError => !success;
 

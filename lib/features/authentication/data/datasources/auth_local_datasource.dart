@@ -1,6 +1,8 @@
 import 'dart:convert';
+
 import 'package:diar_tunis/core/storage/secure_storage.dart';
 import 'package:diar_tunis/features/authentication/data/models/user_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class AuthLocalDataSource {
   Future<UserModel?> getLastUser();
@@ -13,15 +15,19 @@ abstract class AuthLocalDataSource {
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   final SecureStorage secureStorage;
-  
+  final SharedPreferences sharedPreferences;
+
   static const String cachedUserKey = 'CACHED_USER';
   static const String cachedTokenKey = 'CACHED_TOKEN';
 
-  AuthLocalDataSourceImpl({required this.secureStorage});
+  AuthLocalDataSourceImpl({
+    required this.secureStorage,
+    required this.sharedPreferences,
+  });
 
   @override
   Future<UserModel?> getLastUser() async {
-    final jsonString = await secureStorage.read(cachedUserKey);
+    final jsonString = sharedPreferences.getString(cachedUserKey);
     if (jsonString != null) {
       return UserModel.fromJson(json.decode(jsonString));
     }
@@ -30,12 +36,15 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
 
   @override
   Future<void> cacheUser(UserModel user) async {
-    await secureStorage.write(cachedUserKey, json.encode(user.toJson()));
+    await sharedPreferences.setString(
+      cachedUserKey,
+      json.encode(user.toJson()),
+    );
   }
 
   @override
   Future<void> clearUser() async {
-    await secureStorage.delete(cachedUserKey);
+    await sharedPreferences.remove(cachedUserKey);
   }
 
   @override

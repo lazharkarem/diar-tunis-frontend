@@ -1,20 +1,26 @@
-import 'package:dagger/dagger.dart';
+import 'package:dartz/dartz.dart';
+import 'package:diar_tunis/core/errors/failures.dart';
+import 'package:diar_tunis/core/network/api_service.dart';
+import 'package:diar_tunis/features/authentication/data/datasources/auth_local_datasource.dart';
+import 'package:diar_tunis/features/authentication/data/datasources/auth_remote_datasource.dart';
+import 'package:diar_tunis/features/authentication/domain/entities/user.dart';
+import 'package:diar_tunis/features/authentication/domain/repositories/auth_repository.dart';
+import 'package:injectable/injectable.dart';
 
-import '../../../../core/network/api_service.dart';
-import '../../domain/entities/user.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../datasources/auth_remote_datasource.dart';
-import '../models/auth_response_model.dart';
-
-@injectable
+@LazySingleton(as: AuthRepository)
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
+  final AuthLocalDataSource _localDataSource;
   final ApiService _apiService;
 
-  AuthRepositoryImpl(this._remoteDataSource, this._apiService);
+  AuthRepositoryImpl(
+    this._remoteDataSource,
+    this._localDataSource,
+    this._apiService,
+  );
 
   @override
-  Future<ApiResponse<User>> register({
+  Future<Either<Failure, User>> register({
     required String name,
     required String email,
     required String password,
@@ -42,32 +48,22 @@ class AuthRepositoryImpl implements AuthRepository {
         yearsOfExperience: yearsOfExperience,
       );
 
-      if (response.isSuccess) {
-        // Save token
-        await _apiService.saveToken(response.data.accessToken);
-
-        return ApiResponse<User>(
-          success: true,
-          data: response.data.user.toDomain(),
-          message: response.message,
-        );
+      if (response.isSuccess && response.data != null) {
+        final authResponse = response.data!;
+        await _localDataSource.cacheToken(authResponse.accessToken);
+        return Right(authResponse.user.toDomain());
       } else {
-        return ApiResponse<User>(
-          success: false,
-          message: response.message,
-          errors: response.errors,
-        );
+        return Left(ServerFailure(message: response.message));
       }
     } catch (e) {
-      return ApiResponse<User>(
-        success: false,
-        message: 'Registration failed: ${e.toString()}',
+      return Left(
+        ServerFailure(message: 'Registration failed: ${e.toString()}'),
       );
     }
   }
 
   @override
-  Future<ApiResponse<User>> login({
+  Future<Either<Failure, User>> login({
     required String email,
     required String password,
   }) async {
@@ -77,58 +73,42 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
 
-      if (response.isSuccess) {
-        // Save token
-        await _apiService.saveToken(response.data.accessToken);
-
-        return ApiResponse<User>(
-          success: true,
-          data: response.data.user.toDomain(),
-          message: response.message,
-        );
+      if (response.isSuccess && response.data != null) {
+        final authResponse = response.data!;
+        await _localDataSource.cacheToken(authResponse.accessToken);
+        return Right(authResponse.user.toDomain());
       } else {
-        return ApiResponse<User>(
-          success: false,
-          message: response.message,
-          errors: response.errors,
-        );
+        return Left(ServerFailure(message: response.message));
       }
     } catch (e) {
-      return ApiResponse<User>(
-        success: false,
-        message: 'Login failed: ${e.toString()}',
-      );
+      return Left(ServerFailure(message: 'Login failed: ${e.toString()}'));
     }
   }
 
   @override
-  Future<ApiResponse<User>> getProfile() async {
+  Future<Either<Failure, User>> getProfile() async {
     try {
       final response = await _remoteDataSource.getProfile();
 
       if (response.isSuccess && response.data != null) {
-        return ApiResponse<User>(
-          success: true,
-          data: response.data!.toDomain(),
-          message: response.message,
-        );
+        return Right(response.data!.toDomain());
       } else {
-        return ApiResponse<User>(
-          success: false,
-          message: response.message,
-          errors: response.errors,
-        );
+        return Left(ServerFailure(message: response.message));
       }
     } catch (e) {
-      return ApiResponse<User>(
-        success: false,
-        message: 'Failed to get profile: ${e.toString()}',
+      return Left(
+        ServerFailure(message: 'Failed to get profile: ${e.toString()}'),
       );
     }
   }
 
   @override
-  Future<ApiResponse<User>> updateProfile({
+  Future<Either<Failure, User>> getCurrentUser() async {
+    return getProfile();
+  }
+
+  @override
+  Future<Either<Failure, User>> updateProfile({
     String? name,
     String? email,
     String? phone,
@@ -151,93 +131,87 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       if (response.isSuccess && response.data != null) {
-        return ApiResponse<User>(
-          success: true,
-          data: response.data!.toDomain(),
-          message: response.message,
-        );
+        return Right(response.data!.toDomain());
       } else {
-        return ApiResponse<User>(
-          success: false,
-          message: response.message,
-          errors: response.errors,
-        );
+        return Left(ServerFailure(message: response.message));
       }
     } catch (e) {
-      return ApiResponse<User>(
-        success: false,
-        message: 'Failed to update profile: ${e.toString()}',
+      return Left(
+        ServerFailure(message: 'Failed to update profile: ${e.toString()}'),
       );
     }
   }
 
   @override
-  Future<ApiResponse<void>> changePassword({
-    required String currentPassword,
-    required String newPassword,
-    required String confirmPassword,
+  Future<Either<Failure, User>> refreshToken() async {
+    try {
+      return Left(ServerFailure(message: 'Refresh token not implemented'));
+    } catch (e) {
+      return Left(
+        ServerFailure(message: 'Failed to refresh token: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> logout() async {
+    try {
+      await _remoteDataSource.logout();
+      await _localDataSource.clearToken();
+      return const Right(null);
+    } catch (e) {
+      await _localDataSource.clearToken();
+      return const Right(null);
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> isLoggedIn() async {
+    try {
+      final token = await _localDataSource.getToken();
+      return Right(token != null && token.isNotEmpty);
+    } catch (e) {
+      return Left(
+        CacheFailure(message: 'Failed to check login status: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getStatistics() async {
+    try {
+      return Left(
+        ServerFailure(message: 'Statistics endpoint not implemented'),
+      );
+    } catch (e) {
+      return Left(
+        ServerFailure(message: 'Failed to get statistics: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> forgotPassword({required String email}) async {
+    try {
+      return Left(ServerFailure(message: 'Forgot password not implemented'));
+    } catch (e) {
+      return Left(
+        ServerFailure(message: 'Failed to send reset email: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resetPassword({
+    required String token,
+    required String password,
   }) async {
     try {
-      final response = await _remoteDataSource.changePassword(
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-        confirmPassword: confirmPassword,
-      );
-
-      if (response.isSuccess) {
-        // Clear token since user needs to login again
-        await _apiService.clearToken();
-      }
-
-      return ApiResponse<void>(
-        success: response.success,
-        message: response.message,
-        errors: response.errors,
-      );
+      return Left(ServerFailure(message: 'Reset password not implemented'));
     } catch (e) {
-      return ApiResponse<void>(
-        success: false,
-        message: 'Failed to change password: ${e.toString()}',
+      return Left(
+        ServerFailure(message: 'Failed to reset password: ${e.toString()}'),
       );
     }
-  }
-
-  @override
-  Future<ApiResponse<void>> logout() async {
-    try {
-      final response = await _remoteDataSource.logout();
-
-      // Always clear token regardless of API response
-      await _apiService.clearToken();
-
-      return ApiResponse<void>(
-        success: true,
-        message: 'Logged out successfully',
-      );
-    } catch (e) {
-      // Still clear token even if API call fails
-      await _apiService.clearToken();
-
-      return ApiResponse<void>(
-        success: true,
-        message: 'Logged out successfully',
-      );
-    }
-  }
-
-  @override
-  Future<bool> isLoggedIn() async {
-    final token = await _apiService.getToken();
-    return token != null && token.isNotEmpty;
-  }
-
-  @override
-  Future<String?> getStoredToken() async {
-    return await _apiService.getToken();
-  }
-
-  @override
-  Future<void> clearStoredToken() async {
-    await _apiService.clearToken();
   }
 }

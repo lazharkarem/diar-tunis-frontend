@@ -9,19 +9,28 @@ abstract class AuthRepository {
   });
 
   Future<Either<Failure, User>> register({
+    required String name,
     required String email,
     required String password,
-    required String firstName,
-    required String lastName,
+    required String confirmPassword,
     required String userType,
     String? phone,
+    String? address,
+    String? businessName,
+    String? businessDescription,
+    String? licenseNumber,
+    int? yearsOfExperience,
   });
 
   Future<Either<Failure, void>> logout();
 
   Future<Either<Failure, User>> getCurrentUser();
 
+  Future<Either<Failure, User>> getProfile();
+
   Future<Either<Failure, User>> refreshToken();
+
+  Future<Either<Failure, bool>> isLoggedIn();
 
   Future<Either<Failure, void>> forgotPassword({required String email});
 
@@ -31,11 +40,15 @@ abstract class AuthRepository {
   });
 
   Future<Either<Failure, User>> updateProfile({
-    required String firstName,
-    required String lastName,
+    String? name,
+    String? email,
     String? phone,
-    String? avatar,
+    String? address,
+    String? businessName,
+    String? businessDescription,
+    String? licenseNumber,
+    int? yearsOfExperience,
   });
 
-  Future<bool> isLoggedIn();
+  Future<Either<Failure, Map<String, dynamic>>> getStatistics();
 }

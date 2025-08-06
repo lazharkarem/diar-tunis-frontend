@@ -12,7 +12,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
   final RegisterUseCase registerUseCase;
   final LogoutUseCase logoutUseCase;
-  final GetUserProfileUseCase getUserProfileUseCase;
+  final GetProfileUseCase getUserProfileUseCase;
 
   AuthBloc({
     required this.loginUseCase,
@@ -50,10 +50,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final result = await registerUseCase(
       RegisterParams(
+        name: '${event.firstName} ${event.lastName}',
         email: event.email,
         password: event.password,
-        firstName: event.firstName,
-        lastName: event.lastName,
+        confirmPassword: event.password,
         userType: event.userType,
         phone: event.phone,
       ),
@@ -71,7 +71,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    final result = await logoutUseCase(NoParams());
+    final result = await logoutUseCase(const NoParams());
 
     result.fold(
       (failure) => emit(AuthError(message: failure.message)),
@@ -85,7 +85,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    final result = await getUserProfileUseCase(NoParams());
+    final result = await getUserProfileUseCase(const NoParams());
 
     result.fold(
       (failure) => emit(AuthUnauthenticated()),

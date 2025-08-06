@@ -1,9 +1,11 @@
+import 'package:dartz/dartz.dart';
+import 'package:diar_tunis/features/authentication/domain/usecases/get_user_profile_usecase.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/user.dart';
 import '../../domain/usecases/check_auth_status_usecase.dart';
-import '../../domain/usecases/get_profile_usecase.dart';
+import '../../domain/usecases/get_statistics_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
@@ -18,6 +20,7 @@ class AuthCubit extends Cubit<AuthState> {
   final UpdateProfileUseCase _updateProfileUseCase;
   final LogoutUseCase _logoutUseCase;
   final CheckAuthStatusUseCase _checkAuthStatusUseCase;
+  final GetStatisticsUseCase _getStatisticsUseCase;
 
   AuthCubit(
     this._loginUseCase,
@@ -26,25 +29,29 @@ class AuthCubit extends Cubit<AuthState> {
     this._updateProfileUseCase,
     this._logoutUseCase,
     this._checkAuthStatusUseCase,
+    this._getStatisticsUseCase,
   ) : super(AuthInitial());
 
   Future<void> checkAuthStatus() async {
     emit(AuthLoading());
 
     try {
-      final isLoggedIn = await _checkAuthStatusUseCase();
+      final authResult = await _checkAuthStatusUseCase(const NoParams());
 
-      if (isLoggedIn) {
-        final result = await _getProfileUseCase();
+      authResult.fold((failure) => emit(AuthUnauthenticated()), (
+        isLoggedIn,
+      ) async {
+        if (isLoggedIn) {
+          final profileResult = await _getProfileUseCase(const NoParams());
 
-        if (result.isSuccess && result.data != null) {
-          emit(AuthAuthenticated(user: result.data!));
+          profileResult.fold(
+            (failure) => emit(AuthUnauthenticated()),
+            (user) => emit(AuthAuthenticated(user: user)),
+          );
         } else {
           emit(AuthUnauthenticated());
         }
-      } else {
-        emit(AuthUnauthenticated());
-      }
+      });
     } catch (e) {
       emit(AuthUnauthenticated());
     }
@@ -58,11 +65,10 @@ class AuthCubit extends Cubit<AuthState> {
         LoginParams(email: email, password: password),
       );
 
-      if (result.isSuccess && result.data != null) {
-        emit(AuthAuthenticated(user: result.data!));
-      } else {
-        emit(AuthError(message: result.message, errors: result.errors));
-      }
+      result.fold(
+        (failure) => emit(AuthError(message: failure.message)),
+        (user) => emit(AuthAuthenticated(user: user)),
+      );
     } catch (e) {
       emit(AuthError(message: 'Login failed: ${e.toString()}'));
     }
@@ -100,11 +106,10 @@ class AuthCubit extends Cubit<AuthState> {
         ),
       );
 
-      if (result.isSuccess && result.data != null) {
-        emit(AuthAuthenticated(user: result.data!));
-      } else {
-        emit(AuthError(message: result.message, errors: result.errors));
-      }
+      result.fold(
+        (failure) => emit(AuthError(message: failure.message)),
+        (user) => emit(AuthAuthenticated(user: user)),
+      );
     } catch (e) {
       emit(AuthError(message: 'Registration failed: ${e.toString()}'));
     }
@@ -139,13 +144,11 @@ class AuthCubit extends Cubit<AuthState> {
         ),
       );
 
-      if (result.isSuccess && result.data != null) {
-        emit(AuthAuthenticated(user: result.data!));
-      } else {
-        emit(AuthError(message: result.message, errors: result.errors));
+      result.fold((failure) {
+        emit(AuthError(message: failure.message));
         // Restore previous state after error
         emit(currentState);
-      }
+      }, (user) => emit(AuthAuthenticated(user: user)));
     } catch (e) {
       emit(AuthError(message: 'Profile update failed: ${e.toString()}'));
       // Restore previous state after error
@@ -153,9 +156,37 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> getStatistics() async {
+    if (state is! AuthAuthenticated) return;
+
+    final currentState = state as AuthAuthenticated;
+    emit(AuthLoading());
+
+    try {
+      final result = await _getStatisticsUseCase(const NoParams());
+
+      result.fold(
+        (failure) {
+          emit(AuthError(message: failure.message));
+          // Restore previous state after error
+          emit(currentState);
+        },
+        (statistics) {
+          // For now, just restore the authenticated state
+          // You might want to create a specific state for statistics
+          emit(currentState);
+        },
+      );
+    } catch (e) {
+      emit(AuthError(message: 'Failed to get statistics: ${e.toString()}'));
+      // Restore previous state after error
+      emit(currentState);
+    }
+  }
+
   Future<void> logout() async {
     try {
-      await _logoutUseCase();
+      await _logoutUseCase(const NoParams());
     } catch (e) {
       // Continue with logout even if API call fails
     } finally {
