@@ -1,6 +1,6 @@
 class ApiConstants {
   // Update this to your Laravel backend URL
-  static const String baseUrl = 'http://10.0.0.189:8000/api';
+  static const String baseUrl = 'http://192.168.1.53:8000/api';
   static const String loginEndpoint = '/auth/login';
   static const String registerEndpoint = '/auth/register';
   static const String logoutEndpoint = '/auth/logout';

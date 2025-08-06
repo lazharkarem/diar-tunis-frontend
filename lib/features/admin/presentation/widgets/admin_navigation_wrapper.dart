@@ -1,5 +1,8 @@
 import 'package:diar_tunis/app/themes/colors.dart';
+import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:diar_tunis/features/authentication/presentation/bloc/auth_event.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class AdminNavigationWrapper extends StatelessWidget {
@@ -18,16 +21,22 @@ class AdminNavigationWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
+        if (didPop) return;
+        
         // Prevent app from closing on back button press
         // Instead, navigate to login page or handle gracefully
         if (currentIndex != 0) {
           context.go('/admin_dashboard');
-          return false;
+          return;
         }
         // Show confirmation dialog for dashboard
-        return await _showExitConfirmation(context);
+        final shouldExit = await _showExitConfirmation(context);
+        if (shouldExit && context.mounted) {
+          // Allow the pop to complete
+        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -177,7 +186,8 @@ class AdminNavigationWrapper extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              context.go('/login');
+              // Trigger logout event in AuthBloc
+              context.read<AuthBloc>().add(AuthLogoutRequested());
             },
             child: const Text('Logout'),
             style: TextButton.styleFrom(foregroundColor: Colors.red),

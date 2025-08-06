@@ -1,4 +1,7 @@
 import 'package:diar_tunis/features/admin/domain/entities/property.dart';
+import 'package:diar_tunis/features/properties/domain/repositories/property_repository.dart';
+import 'package:diar_tunis/features/shared/domain/entities/destination.dart';
+import 'package:diar_tunis/features/shared/domain/entities/property_category.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/network/api_service.dart';
@@ -153,29 +156,30 @@ class PropertyRepositoryImpl implements PropertyRepository {
   }
 
   @override
-  Future<ApiResponse<List<Category>>> getPropertyCategories() async {
+  Future<ApiResponse<List<PropertyCategory>>> getPropertyCategories() async {
     try {
       final response = await _remoteDataSource.getPropertyCategories();
 
       if (response.isSuccess && response.data != null) {
         final categories = response.data!
-            .map((model) => model.toDomain())
+            .where((model) => model != null)
+            .map((model) => (model).toDomain())
             .toList();
 
-        return ApiResponse<List<Category>>(
+        return ApiResponse<List<PropertyCategory>>(
           success: true,
           data: categories,
           message: response.message,
         );
       } else {
-        return ApiResponse<List<Category>>(
+        return ApiResponse<List<PropertyCategory>>(
           success: false,
           message: response.message,
           errors: response.errors,
         );
       }
     } catch (e) {
-      return ApiResponse<List<Category>>(
+      return ApiResponse<List<PropertyCategory>>(
         success: false,
         message: 'Failed to get property categories: ${e.toString()}',
       );

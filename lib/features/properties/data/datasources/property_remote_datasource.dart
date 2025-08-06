@@ -1,4 +1,5 @@
 import 'package:diar_tunis/features/admin/data/models/property_model.dart';
+import 'package:diar_tunis/features/properties/domain/entities/category.dart';
 import 'package:diar_tunis/features/shared/data/models/destination_model.dart';
 import 'package:injectable/injectable.dart';
 

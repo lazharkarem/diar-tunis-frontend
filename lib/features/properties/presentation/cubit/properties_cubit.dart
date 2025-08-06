@@ -1,7 +1,17 @@
+import 'package:dartz/dartz.dart';
+import 'package:diar_tunis/core/errors/failures.dart';
 import 'package:diar_tunis/features/admin/domain/entities/property.dart';
+import 'package:diar_tunis/features/authentication/domain/usecases/usecase.dart';
+import 'package:diar_tunis/features/properties/domain/usecases/get_featured_properties_usecase.dart';
+import 'package:diar_tunis/features/properties/domain/usecases/get_popular_destinations_usecase.dart';
+import 'package:diar_tunis/features/properties/domain/usecases/get_properties_usecase.dart';
+import 'package:diar_tunis/features/properties/domain/usecases/get_property_categories_usecase.dart';
+import 'package:diar_tunis/features/properties/domain/usecases/search_properties_usecase.dart';
+import 'package:diar_tunis/features/shared/domain/entities/property_category.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../features/shared/domain/entities/destination.dart';
 
 part 'properties_state.dart';
 
@@ -29,24 +39,37 @@ class PropertiesCubit extends Cubit<PropertiesState> {
         _getFeaturedPropertiesUseCase(
           const FeaturedPropertiesParams(limit: 10),
         ),
-        _getPopularDestinationsUseCase(),
-        _getPropertyCategoriesUseCase(),
+        _getPopularDestinationsUseCase(NoParams()),
+        _getPropertyCategoriesUseCase(NoParams()),
       ]);
 
-      final featuredResult = results[0] as ApiResponse<List<Property>>;
-      final destinationsResult = results[1] as ApiResponse<List<Destination>>;
-      final categoriesResult = results[2] as ApiResponse<List<Category>>;
+      final featuredEither = results[0] as Either<Failure, List<Property>>;
+      final destinationsEither =
+          results[1] as Either<Failure, List<Destination>>;
+      final categoriesEither =
+          results[2] as Either<Failure, List<PropertyCategory>>;
 
-      emit(
-        PropertiesLoaded(
-          featuredProperties: featuredResult.data ?? [],
-          popularDestinations: destinationsResult.data ?? [],
-          categories: categoriesResult.data ?? [],
-          properties: [],
-          hasReachedMax: true,
-          currentPage: 1,
-        ),
-      );
+      if (featuredEither.isRight() &&
+          destinationsEither.isRight() &&
+          categoriesEither.isRight()) {
+        emit(
+          PropertiesLoaded(
+            featuredProperties: featuredEither.getOrElse(() => []),
+            popularDestinations: destinationsEither.getOrElse(() => []),
+            categories: categoriesEither.getOrElse(() => []),
+            properties: [],
+            hasReachedMax: true,
+            currentPage: 1,
+          ),
+        );
+      } else {
+        final errorMessage = _getErrorMessage(
+          featuredEither,
+          destinationsEither,
+          categoriesEither,
+        );
+        emit(PropertiesError(message: errorMessage));
+      }
     } catch (e) {
       emit(
         PropertiesError(
@@ -54,6 +77,17 @@ class PropertiesCubit extends Cubit<PropertiesState> {
         ),
       );
     }
+  }
+
+  String _getErrorMessage(
+    Either<Failure, List<Property>> featured,
+    Either<Failure, List<Destination>> destinations,
+    Either<Failure, List<PropertyCategory>> categories,
+  ) {
+    if (featured.isLeft()) return (featured as Left).value.message;
+    if (destinations.isLeft()) return (destinations as Left).value.message;
+    if (categories.isLeft()) return (categories as Left).value.message;
+    return 'Failed to load initial data';
   }
 
   Future<void> loadProperties({int page = 1, bool refresh = false}) async {
@@ -66,48 +100,50 @@ class PropertiesCubit extends Cubit<PropertiesState> {
     }
 
     try {
-      final result = await _getPropertiesUseCase(
+      final either = await _getPropertiesUseCase(
         GetPropertiesParams(page: page, perPage: 15),
       );
 
-      if (result.isSuccess && result.data != null) {
-        final newProperties = result.data!.data;
-        final hasReachedMax = result.data!.currentPage >= result.data!.lastPage;
+      either.fold(
+        (failure) => emit(PropertiesError(message: failure.message)),
+        (paginatedResponse) {
+          final newProperties = paginatedResponse.data;
+          final hasReachedMax =
+              paginatedResponse.currentPage >= paginatedResponse.lastPage;
 
-        if (currentState is PropertiesLoaded && !refresh && page > 1) {
-          // Append to existing properties
-          emit(
-            currentState.copyWith(
-              properties: [...currentState.properties, ...newProperties],
-              hasReachedMax: hasReachedMax,
-              currentPage: page,
-            ),
-          );
-        } else if (currentState is PropertiesLoaded) {
-          // Replace properties (refresh or first load)
-          emit(
-            currentState.copyWith(
-              properties: newProperties,
-              hasReachedMax: hasReachedMax,
-              currentPage: page,
-            ),
-          );
-        } else {
-          // First load without initial data
-          emit(
-            PropertiesLoaded(
-              featuredProperties: [],
-              popularDestinations: [],
-              categories: [],
-              properties: newProperties,
-              hasReachedMax: hasReachedMax,
-              currentPage: page,
-            ),
-          );
-        }
-      } else {
-        emit(PropertiesError(message: result.message));
-      }
+          if (currentState is PropertiesLoaded && !refresh && page > 1) {
+            // Append to existing properties
+            emit(
+              currentState.copyWith(
+                properties: [...currentState.properties, ...newProperties],
+                hasReachedMax: hasReachedMax,
+                currentPage: page,
+              ),
+            );
+          } else if (currentState is PropertiesLoaded) {
+            // Replace properties (refresh or first load)
+            emit(
+              currentState.copyWith(
+                properties: newProperties,
+                hasReachedMax: hasReachedMax,
+                currentPage: page,
+              ),
+            );
+          } else {
+            // First load without initial data
+            emit(
+              PropertiesLoaded(
+                featuredProperties: [],
+                popularDestinations: [],
+                categories: [],
+                properties: newProperties,
+                hasReachedMax: hasReachedMax,
+                currentPage: page,
+              ),
+            );
+          }
+        },
+      );
     } catch (e) {
       emit(
         PropertiesError(message: 'Failed to load properties: ${e.toString()}'),
@@ -134,7 +170,7 @@ class PropertiesCubit extends Cubit<PropertiesState> {
     }
 
     try {
-      final result = await _searchPropertiesUseCase(
+      final either = await _searchPropertiesUseCase(
         SearchPropertiesParams(
           query: query,
           page: page,
@@ -147,34 +183,39 @@ class PropertiesCubit extends Cubit<PropertiesState> {
         ),
       );
 
-      if (result.isSuccess && result.data != null) {
-        final searchResults = result.data!.data;
-        final hasReachedMax = result.data!.currentPage >= result.data!.lastPage;
+      either.fold(
+        (failure) => emit(PropertiesError(message: failure.message)),
+        (paginatedResponse) {
+          final searchResults = paginatedResponse.data;
+          final hasReachedMax =
+              paginatedResponse.currentPage >= paginatedResponse.lastPage;
 
-        if (currentState is PropertiesSearchLoaded && !refresh && page > 1) {
-          // Append to existing search results
-          emit(
-            currentState.copyWith(
-              searchResults: [...currentState.searchResults, ...searchResults],
-              hasReachedMax: hasReachedMax,
-              currentPage: page,
-            ),
-          );
-        } else {
-          // New search or refresh
-          emit(
-            PropertiesSearchLoaded(
-              query: query,
-              searchResults: searchResults,
-              hasReachedMax: hasReachedMax,
-              currentPage: page,
-              totalResults: result.data!.total,
-            ),
-          );
-        }
-      } else {
-        emit(PropertiesError(message: result.message));
-      }
+          if (currentState is PropertiesSearchLoaded && !refresh && page > 1) {
+            // Append to existing search results
+            emit(
+              currentState.copyWith(
+                searchResults: [
+                  ...currentState.searchResults,
+                  ...searchResults,
+                ],
+                hasReachedMax: hasReachedMax,
+                currentPage: page,
+              ),
+            );
+          } else {
+            // New search or refresh
+            emit(
+              PropertiesSearchLoaded(
+                query: query,
+                searchResults: searchResults,
+                hasReachedMax: hasReachedMax,
+                currentPage: page,
+                totalResults: paginatedResponse.total,
+              ),
+            );
+          }
+        },
+      );
     } catch (e) {
       emit(PropertiesError(message: 'Search failed: ${e.toString()}'));
     }

@@ -1,6 +1,8 @@
+import 'package:diar_tunis/features/shared/domain/entities/destination.dart';
 import 'package:equatable/equatable.dart';
 
 class DestinationModel extends Equatable {
+  final String id;
   final String name;
   final String country;
   final int bookingCount;
@@ -8,6 +10,7 @@ class DestinationModel extends Equatable {
   final String imageUrl;
 
   const DestinationModel({
+    required this.id,
     required this.name,
     required this.country,
     required this.bookingCount,
@@ -17,6 +20,7 @@ class DestinationModel extends Equatable {
 
   factory DestinationModel.fromJson(Map<String, dynamic> json) {
     return DestinationModel(
+      id: json['id'],
       name: json['name'],
       country: json['country'],
       bookingCount: json['booking_count'] ?? 0,
@@ -27,6 +31,7 @@ class DestinationModel extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
       'country': country,
       'booking_count': bookingCount,
@@ -35,6 +40,24 @@ class DestinationModel extends Equatable {
     };
   }
 
+  Destination toDomain() {
+    return Destination(
+      id: id,
+      name: name,
+      country: country,
+      bookingCount: bookingCount,
+      avgPrice: avgPrice,
+      imageUrl: imageUrl,
+    );
+  }
+
   @override
-  List<Object?> get props => [name, country, bookingCount, avgPrice, imageUrl];
+  List<Object?> get props => [
+    id,
+    name,
+    country,
+    bookingCount,
+    avgPrice,
+    imageUrl,
+  ];
 }

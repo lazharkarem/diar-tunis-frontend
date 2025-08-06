@@ -1,4 +1,5 @@
 // Core imports
+import 'package:diar_tunis/core/network/api_service.dart';
 import 'package:diar_tunis/core/network/network_info.dart';
 import 'package:diar_tunis/core/storage/secure_storage.dart';
 // Admin imports
@@ -23,6 +24,16 @@ import 'package:diar_tunis/features/authentication/domain/usecases/register_usec
 import 'package:diar_tunis/features/authentication/domain/usecases/update_profile_usecase.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:diar_tunis/features/authentication/presentation/cubit/auth_cubit.dart';
+// Properties imports
+import 'package:diar_tunis/features/properties/data/datasources/property_remote_datasource.dart';
+import 'package:diar_tunis/features/properties/data/repositories/property_repository_impl.dart';
+import 'package:diar_tunis/features/properties/domain/repositories/property_repository.dart';
+import 'package:diar_tunis/features/properties/domain/usecases/get_featured_properties_usecase.dart';
+import 'package:diar_tunis/features/properties/domain/usecases/get_popular_destinations_usecase.dart';
+import 'package:diar_tunis/features/properties/domain/usecases/get_properties_usecase.dart';
+import 'package:diar_tunis/features/properties/domain/usecases/get_property_categories_usecase.dart';
+import 'package:diar_tunis/features/properties/domain/usecases/search_properties_usecase.dart';
+import 'package:diar_tunis/features/properties/presentation/cubit/properties_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
@@ -63,6 +74,17 @@ Future<void> init() async {
     ),
   );
 
+  // Properties Cubit
+  sl.registerFactory(
+    () => PropertiesCubit(
+      sl(), // GetPropertiesUseCase
+      sl(), // GetFeaturedPropertiesUseCase
+      sl(), // GetPopularDestinationsUseCase
+      sl(), // GetPropertyCategoriesUseCase
+      sl(), // SearchPropertiesUseCase
+    ),
+  );
+
   // Use Cases - Authentication
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
@@ -78,24 +100,36 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetAllPropertiesUseCase(sl()));
   sl.registerLazySingleton(() => UpdatePropertyStatusUseCase(sl()));
 
+  // Use Cases - Properties
+  sl.registerLazySingleton(() => GetPropertiesUseCase(sl()));
+  sl.registerLazySingleton(() => GetFeaturedPropertiesUseCase(sl()));
+  sl.registerLazySingleton(() => GetPopularDestinationsUseCase(sl()));
+  sl.registerLazySingleton(() => GetPropertyCategoriesUseCase(sl()));
+  sl.registerLazySingleton(() => SearchPropertiesUseCase(sl()));
+
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(sl(), sl()),
   );
   sl.registerLazySingleton<AdminRepository>(() => AdminRepositoryImpl(sl()));
+  sl.registerLazySingleton<PropertyRepository>(() => PropertyRepositoryImpl(sl()));
 
   // Data sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(dio: sl()),
+    () => AuthRemoteDataSourceImpl(sl()),
   );
   sl.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImpl(sharedPreferences: sl(), secureStorage: sl()),
   );
   sl.registerLazySingleton<AdminRemoteDataSource>(
-    () => AdminRemoteDataSourceImpl(dio: sl()),
+    () => AdminRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<PropertyRemoteDataSource>(
+    () => PropertyRemoteDataSourceImpl(sl()),
   );
 
   // Core
+  sl.registerLazySingleton(() => ApiService());
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
 
   // External dependencies

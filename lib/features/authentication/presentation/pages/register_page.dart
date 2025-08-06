@@ -1,7 +1,9 @@
+import 'package:diar_tunis/features/authentication/presentation/cubit/auth_cubit.dart';
+import 'package:diar_tunis/features/shared/widgets/custom_buttom.dart';
+import 'package:diar_tunis/features/shared/widgets/custom_loading_overlay.dart';
+import 'package:diar_tunis/features/shared/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../cubit/auth_cubit.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -219,7 +221,7 @@ class _RegisterPageState extends State<RegisterPage> {
         CustomTextField(
           controller: _nameController,
           labelText: 'Full Name',
-          prefixIcon: Icons.person,
+          prefixIcon: Icon(Icons.person),
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please enter your full name';
@@ -234,7 +236,7 @@ class _RegisterPageState extends State<RegisterPage> {
         CustomTextField(
           controller: _emailController,
           labelText: 'Email Address',
-          prefixIcon: Icons.email,
+          prefixIcon: Icon(Icons.email),
           keyboardType: TextInputType.emailAddress,
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -250,7 +252,7 @@ class _RegisterPageState extends State<RegisterPage> {
         CustomTextField(
           controller: _passwordController,
           labelText: 'Password',
-          prefixIcon: Icons.lock,
+          prefixIcon: Icon(Icons.lock),
           obscureText: !_isPasswordVisible,
           suffixIcon: IconButton(
             icon: Icon(
@@ -273,7 +275,7 @@ class _RegisterPageState extends State<RegisterPage> {
         CustomTextField(
           controller: _confirmPasswordController,
           labelText: 'Confirm Password',
-          prefixIcon: Icons.lock,
+          prefixIcon: Icon(Icons.lock),
           obscureText: !_isConfirmPasswordVisible,
           suffixIcon: IconButton(
             icon: Icon(
@@ -313,14 +315,14 @@ class _RegisterPageState extends State<RegisterPage> {
         CustomTextField(
           controller: _phoneController,
           labelText: 'Phone Number',
-          prefixIcon: Icons.phone,
+          prefixIcon: Icon(Icons.phone),
           keyboardType: TextInputType.phone,
         ),
         const SizedBox(height: 16),
         CustomTextField(
           controller: _addressController,
           labelText: 'Address',
-          prefixIcon: Icons.location_on,
+          prefixIcon: Icon(Icons.location_on),
           maxLines: 2,
         ),
       ],
@@ -341,7 +343,7 @@ class _RegisterPageState extends State<RegisterPage> {
         CustomTextField(
           controller: _businessNameController,
           labelText: 'Business Name *',
-          prefixIcon: Icons.business,
+          prefixIcon: Icon(Icons.business),
           validator: _selectedUserType == 'service_provider'
               ? (value) {
                   if (value == null || value.isEmpty) {
@@ -355,7 +357,7 @@ class _RegisterPageState extends State<RegisterPage> {
         CustomTextField(
           controller: _businessDescriptionController,
           labelText: 'Business Description *',
-          prefixIcon: Icons.description,
+          prefixIcon: Icon(Icons.description),
           maxLines: 3,
           validator: _selectedUserType == 'service_provider'
               ? (value) {
@@ -370,13 +372,13 @@ class _RegisterPageState extends State<RegisterPage> {
         CustomTextField(
           controller: _licenseNumberController,
           labelText: 'License Number (if applicable)',
-          prefixIcon: Icons.card_membership,
+          prefixIcon: Icon(Icons.card_membership),
         ),
         const SizedBox(height: 16),
         CustomTextField(
           controller: _yearsOfExperienceController,
           labelText: 'Years of Experience',
-          prefixIcon: Icons.work_history,
+          prefixIcon: Icon(Icons.work_history),
           keyboardType: TextInputType.number,
         ),
       ],

@@ -1,5 +1,6 @@
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
+import 'package:diar_tunis/features/admin/presentation/widgets/admin_navigation_wrapper.dart';
 import 'package:flutter/material.dart';
 
 class BookingManagementPage extends StatelessWidget {
@@ -7,25 +8,10 @@ class BookingManagementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Booking Management'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // Implement search functionality
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // Implement filter functionality
-            },
-          ),
-        ],
-      ),
-      body: Column(
+    return AdminNavigationWrapper(
+      title: 'Booking Management',
+      currentIndex: 3,
+      child: Column(
         children: [
           // Filter tabs
           Container(

@@ -11,12 +11,10 @@ class PropertiesInitial extends PropertiesState {}
 
 class PropertiesLoading extends PropertiesState {}
 
-class PropertiesSearching extends PropertiesState {}
-
 class PropertiesLoaded extends PropertiesState {
   final List<Property> featuredProperties;
   final List<Destination> popularDestinations;
-  final List<Category> categories;
+  final List<PropertyCategory> categories;
   final List<Property> properties;
   final bool hasReachedMax;
   final int currentPage;
@@ -33,7 +31,7 @@ class PropertiesLoaded extends PropertiesState {
   PropertiesLoaded copyWith({
     List<Property>? featuredProperties,
     List<Destination>? popularDestinations,
-    List<Category>? categories,
+    List<PropertyCategory>? categories,
     List<Property>? properties,
     bool? hasReachedMax,
     int? currentPage,
@@ -58,6 +56,8 @@ class PropertiesLoaded extends PropertiesState {
     currentPage,
   ];
 }
+
+class PropertiesSearching extends PropertiesState {}
 
 class PropertiesSearchLoaded extends PropertiesState {
   final String query;

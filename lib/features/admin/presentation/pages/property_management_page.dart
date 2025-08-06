@@ -1,4 +1,5 @@
 import 'package:diar_tunis/app/themes/colors.dart';
+import 'package:diar_tunis/features/admin/presentation/widgets/admin_navigation_wrapper.dart';
 import 'package:diar_tunis/features/admin/presentation/widgets/property_list_item.dart';
 import 'package:flutter/material.dart';
 
@@ -29,21 +30,27 @@ class _PropertyManagementPageState extends State<PropertyManagementPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Property Management'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'All'),
-            Tab(text: 'Pending'),
-            Tab(text: 'Active'),
-            Tab(text: 'Rejected'),
-          ],
-        ),
-      ),
-      body: Column(
+    return AdminNavigationWrapper(
+      title: 'Property Management',
+      currentIndex: 2,
+      child: Column(
         children: [
+          // Tab bar
+          Container(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+            child: TabBar(
+              controller: _tabController,
+              labelColor: Theme.of(context).primaryColor,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Theme.of(context).primaryColor,
+              tabs: const [
+                Tab(text: 'All'),
+                Tab(text: 'Pending'),
+                Tab(text: 'Active'),
+                Tab(text: 'Rejected'),
+              ],
+            ),
+          ),
           // Search and filter bar
           Padding(
             padding: const EdgeInsets.all(16),

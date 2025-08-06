@@ -4,6 +4,7 @@ import 'package:diar_tunis/features/admin/presentation/pages/property_management
 import 'package:diar_tunis/features/admin/presentation/pages/user_management_page.dart';
 import 'package:diar_tunis/features/authentication/presentation/pages/login_page.dart';
 import 'package:diar_tunis/features/authentication/presentation/pages/register_page.dart';
+import 'package:diar_tunis/features/authentication/presentation/pages/splash_page.dart';
 import 'package:diar_tunis/features/guest/presentation/pages/booking_history_page.dart';
 import 'package:diar_tunis/features/guest/presentation/pages/booking_page.dart';
 import 'package:diar_tunis/features/guest/presentation/pages/guest_home_page.dart';
@@ -17,12 +18,12 @@ import 'package:go_router/go_router.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/',
     routes: <GoRoute>[
       GoRoute(
         path: '/',
         builder: (BuildContext context, GoRouterState state) =>
-            const LoginPage(),
+            const SplashPage(),
       ),
       GoRoute(
         path: '/login',

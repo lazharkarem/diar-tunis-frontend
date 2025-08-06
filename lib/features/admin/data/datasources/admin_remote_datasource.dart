@@ -1,7 +1,7 @@
 import 'package:diar_tunis/features/admin/data/models/admin_statistics_model.dart';
 import 'package:diar_tunis/features/admin/data/models/property_model.dart';
 import 'package:diar_tunis/features/shared/data/models/booking_model.dart';
-import 'package:injectable/injectable.dart'; // ✅ Correct import
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/network/api_service.dart';
 import '../../../shared/data/models/user_model.dart';

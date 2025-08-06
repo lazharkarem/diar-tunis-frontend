@@ -1,12 +1,13 @@
-import 'package:flutter/foundation.dart';
+import 'package:diar_tunis/features/shared/domain/entities/property_category.dart';
+import 'package:diar_tunis/features/shared/widgets/loading_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../properties/presentation/cubit/properties_cubit.dart';
 
 class CategoryChips extends StatefulWidget {
-  final Function(Category?)? onCategorySelected;
-  final Category? selectedCategory;
+  final Function(PropertyCategory?)? onCategorySelected;
+  final PropertyCategory? selectedCategory;
 
   const CategoryChips({
     super.key,
@@ -19,7 +20,7 @@ class CategoryChips extends StatefulWidget {
 }
 
 class _CategoryChipsState extends State<CategoryChips> {
-  Category? _selectedCategory;
+  PropertyCategory? _selectedCategory;
 
   @override
   void initState() {
@@ -42,6 +43,12 @@ class _CategoryChipsState extends State<CategoryChips> {
             return const SizedBox.shrink();
           }
 
+          final totalCount = categories.fold<int>(
+            0,
+            (int sum, PropertyCategory category) =>
+                sum + category.propertyCount,
+          );
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -60,16 +67,12 @@ class _CategoryChipsState extends State<CategoryChips> {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  itemCount: categories.length + 1, // +1 for "All" chip
+                  itemCount: categories.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      // "All" chip
                       return _CategoryChip(
                         label: 'All',
-                        count: categories.fold<int>(
-                          0,
-                          (sum, category) => sum + category.propertyCount,
-                        ),
+                        count: totalCount,
                         isSelected: _selectedCategory == null,
                         onTap: () => _selectCategory(null),
                       );
@@ -95,11 +98,10 @@ class _CategoryChipsState extends State<CategoryChips> {
     );
   }
 
-  void _selectCategory(Category? category) {
+  void _selectCategory(PropertyCategory? category) {
     setState(() {
       _selectedCategory = category;
     });
-
     widget.onCategorySelected?.call(category);
   }
 
@@ -116,7 +118,7 @@ class _CategoryChipsState extends State<CategoryChips> {
       case 'hotel':
         return Icons.hotel;
       default:
-        return Icons.home;
+        return Icons.category;
     }
   }
 }
@@ -138,40 +140,35 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(
+        avatar: icon != null
+            ? Icon(
                 icon,
                 size: 16,
                 color: isSelected
                     ? Theme.of(context).colorScheme.onPrimary
                     : Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 4),
-            ],
-            Text('$label ($count)'),
-          ],
-        ),
+              )
+            : null,
+        label: Text('$label ($count)'),
         selected: isSelected,
         onSelected: (_) => onTap(),
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-        selectedColor: Theme.of(context).primaryColor,
-        labelStyle: TextStyle(
+        selectedColor: Theme.of(context).colorScheme.primary,
+        labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
           color: isSelected
               ? Theme.of(context).colorScheme.onPrimary
               : Theme.of(context).colorScheme.onSurfaceVariant,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
         side: BorderSide(
           color: isSelected
-              ? Theme.of(context).primaryColor
+              ? Theme.of(context).colorScheme.primary
               : Colors.transparent,
+          width: 1,
         ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

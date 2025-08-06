@@ -54,10 +54,10 @@ class _LoginPageState extends State<LoginPage> {
               case 'host':
                 context.go('/host_dashboard');
                 break;
-              case 'guest':
-              case 'service_customer':
-                context.go('/guest_home');
+              case 'service_provider':
+                context.go('/guest_home'); // For now, service providers use guest interface
                 break;
+              case 'guest':
               default:
                 context.go('/guest_home');
             }

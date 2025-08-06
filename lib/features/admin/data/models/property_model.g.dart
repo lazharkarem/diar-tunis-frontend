@@ -13,8 +13,10 @@ PropertyModel _$PropertyModelFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String,
       location: json['location'] as String,
       price: (json['price'] as num).toDouble(),
-      images:
-          (json['images'] as List<dynamic>).map((e) => e as String).toList(),
+      pricePerNight: (json['pricePerNight'] as num).toDouble(),
+      images: (json['images'] as List<dynamic>)
+          .map((e) => PropertyImageModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
       type: json['type'] as String,
       bedrooms: (json['bedrooms'] as num).toInt(),
       bathrooms: (json['bathrooms'] as num).toInt(),
@@ -23,6 +25,8 @@ PropertyModel _$PropertyModelFromJson(Map<String, dynamic> json) =>
           (json['amenities'] as List<dynamic>).map((e) => e as String).toList(),
       status: json['status'] as String,
       hostId: json['hostId'] as String,
+      city: json['city'] as String,
+      state: json['state'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
 
@@ -33,6 +37,7 @@ Map<String, dynamic> _$PropertyModelToJson(PropertyModel instance) =>
       'description': instance.description,
       'location': instance.location,
       'price': instance.price,
+      'pricePerNight': instance.pricePerNight,
       'images': instance.images,
       'type': instance.type,
       'bedrooms': instance.bedrooms,
@@ -41,5 +46,7 @@ Map<String, dynamic> _$PropertyModelToJson(PropertyModel instance) =>
       'amenities': instance.amenities,
       'status': instance.status,
       'hostId': instance.hostId,
+      'city': instance.city,
+      'state': instance.state,
       'createdAt': instance.createdAt.toIso8601String(),
     };

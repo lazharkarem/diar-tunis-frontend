@@ -1,5 +1,5 @@
-import 'package:dartz/dartz.dart';
 import 'package:diar_tunis/features/authentication/domain/usecases/get_user_profile_usecase.dart';
+import 'package:diar_tunis/features/authentication/domain/usecases/usecase.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -36,13 +36,13 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
 
     try {
-      final authResult = await _checkAuthStatusUseCase(const NoParams());
+      final authResult = await _checkAuthStatusUseCase(NoParams());
 
       authResult.fold((failure) => emit(AuthUnauthenticated()), (
         isLoggedIn,
       ) async {
         if (isLoggedIn) {
-          final profileResult = await _getProfileUseCase(const NoParams());
+          final profileResult = await _getProfileUseCase(NoParams());
 
           profileResult.fold(
             (failure) => emit(AuthUnauthenticated()),
@@ -163,7 +163,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
 
     try {
-      final result = await _getStatisticsUseCase(const NoParams());
+      final result = await _getStatisticsUseCase(NoParams());
 
       result.fold(
         (failure) {
@@ -186,7 +186,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> logout() async {
     try {
-      await _logoutUseCase(const NoParams());
+      await _logoutUseCase(NoParams());
     } catch (e) {
       // Continue with logout even if API call fails
     } finally {

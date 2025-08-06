@@ -1,3 +1,4 @@
+// features/authentication/domain/usecases/get_profile_usecase.dart
 import 'package:dartz/dartz.dart';
 import 'package:diar_tunis/core/errors/failures.dart';
 import 'package:diar_tunis/features/authentication/domain/entities/user.dart';
@@ -13,9 +14,4 @@ class GetProfileUseCase implements UseCase<User, NoParams> {
   Future<Either<Failure, User>> call(NoParams params) async {
     return await repository.getProfile();
   }
-}
-
-// NoParams class for use cases that don't need parameters
-class NoParams {
-  const NoParams();
 }

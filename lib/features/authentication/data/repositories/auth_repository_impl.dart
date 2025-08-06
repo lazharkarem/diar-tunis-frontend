@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 import 'package:diar_tunis/core/errors/failures.dart';
-import 'package:diar_tunis/core/network/api_service.dart';
 import 'package:diar_tunis/features/authentication/data/datasources/auth_local_datasource.dart';
 import 'package:diar_tunis/features/authentication/data/datasources/auth_remote_datasource.dart';
 import 'package:diar_tunis/features/authentication/domain/entities/user.dart';
@@ -11,13 +10,8 @@ import 'package:injectable/injectable.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
   final AuthLocalDataSource _localDataSource;
-  final ApiService _apiService;
 
-  AuthRepositoryImpl(
-    this._remoteDataSource,
-    this._localDataSource,
-    this._apiService,
-  );
+  AuthRepositoryImpl(this._remoteDataSource, this._localDataSource);
 
   @override
   Future<Either<Failure, User>> register({
@@ -76,6 +70,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (response.isSuccess && response.data != null) {
         final authResponse = response.data!;
         await _localDataSource.cacheToken(authResponse.accessToken);
+        await _localDataSource.cacheUser(authResponse.user);
         return Right(authResponse.user.toDomain());
       } else {
         return Left(ServerFailure(message: response.message));
@@ -104,7 +99,20 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, User>> getCurrentUser() async {
-    return getProfile();
+    try {
+      // First try to get cached user if we have a valid token
+      final token = await _localDataSource.getToken();
+      if (token != null && token.isNotEmpty) {
+        final cachedUser = await _localDataSource.getLastUser();
+        if (cachedUser != null) {
+          // Return cached user, but we might want to refresh in background
+          return Right(cachedUser.toDomain());
+        }
+      }
+      return Left(ServerFailure(message: 'No cached user found'));
+    } catch (e) {
+      return Left(CacheFailure(message: 'Failed to get cached user: ${e.toString()}'));
+    }
   }
 
   @override
@@ -158,9 +166,12 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDataSource.logout();
       await _localDataSource.clearToken();
+      await _localDataSource.clearUser();
       return const Right(null);
     } catch (e) {
+      // Clear local data even if remote logout fails
       await _localDataSource.clearToken();
+      await _localDataSource.clearUser();
       return const Right(null);
     }
   }
