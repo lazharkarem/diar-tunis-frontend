@@ -31,6 +31,8 @@ class UserModel {
 
   // Convert to domain entity
   User toDomain() {
+    print('Converting UserModel to Domain - current userType: $userType');
+
     return User(
       id: id,
       email: email,
@@ -38,7 +40,7 @@ class UserModel {
       lastName: lastName,
       phone: phone,
       avatar: avatar,
-      userType: userType,
+      userType: userType.toLowerCase(), // Ensure lowercase
       isVerified: isVerified,
       createdAt: createdAt,
       updatedAt: updatedAt,
@@ -67,6 +69,14 @@ class UserModel {
     final name = json['name'] as String? ?? '';
     final nameParts = name.split(' ');
 
+    // Extract user_type with proper fallback and case handling
+    final rawUserType = json['user_type'] as String?;
+    final userType = rawUserType?.toLowerCase() ?? 'guest';
+
+    print(
+      'Creating UserModel from JSON - raw user_type: $rawUserType, processed: $userType',
+    );
+
     return UserModel(
       id: json['id']?.toString() ?? '',
       email: json['email'] as String? ?? '',
@@ -74,7 +84,7 @@ class UserModel {
       lastName: nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '',
       phone: json['phone_number'] as String?,
       avatar: json['profile_picture'] as String?,
-      userType: json['user_type'] as String? ?? 'guest',
+      userType: userType, // Use the processed value
       isVerified: json['email_verified_at'] != null,
       createdAt:
           DateTime.tryParse(json['created_at'] as String? ?? '') ??
@@ -84,7 +94,6 @@ class UserModel {
           DateTime.now(),
     );
   }
-
   Map<String, dynamic> toJson() {
     return {
       'id': id,

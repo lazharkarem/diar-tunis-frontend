@@ -1,6 +1,5 @@
 import 'user_model.dart';
 
-
 class AuthResponseModel {
   final bool success;
   final String message;

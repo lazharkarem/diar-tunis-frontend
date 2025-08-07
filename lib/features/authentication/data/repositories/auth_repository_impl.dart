@@ -62,6 +62,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     try {
+      print('Attempting login with email: $email');
       final response = await _remoteDataSource.login(
         email: email,
         password: password,
@@ -69,9 +70,15 @@ class AuthRepositoryImpl implements AuthRepository {
 
       if (response.isSuccess && response.data != null) {
         final authResponse = response.data!;
+        print('Raw API response: ${authResponse.toJson()}'); // Add this line
+
         await _localDataSource.cacheToken(authResponse.accessToken);
         await _localDataSource.cacheUser(authResponse.user);
-        return Right(authResponse.user.toDomain());
+
+        final domainUser = authResponse.user.toDomain();
+        print('Converted domain user: ${domainUser.toString()}');
+
+        return Right(domainUser);
       } else {
         return Left(ServerFailure(message: response.message));
       }
@@ -111,7 +118,9 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return Left(ServerFailure(message: 'No cached user found'));
     } catch (e) {
-      return Left(CacheFailure(message: 'Failed to get cached user: ${e.toString()}'));
+      return Left(
+        CacheFailure(message: 'Failed to get cached user: ${e.toString()}'),
+      );
     }
   }
 

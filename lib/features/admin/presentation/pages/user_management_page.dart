@@ -33,6 +33,12 @@ class _UserManagementPageState extends State<UserManagementPage>
     return AdminNavigationWrapper(
       title: 'User Management',
       currentIndex: 1,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddUserDialog(context);
+        },
+        child: const Icon(Icons.add),
+      ),
       child: Column(
         children: [
           // Tab bar
@@ -85,12 +91,6 @@ class _UserManagementPageState extends State<UserManagementPage>
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddUserDialog(context);
-        },
-        child: const Icon(Icons.add),
       ),
     );
   }
