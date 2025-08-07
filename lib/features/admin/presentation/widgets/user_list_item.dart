@@ -18,65 +18,130 @@ class UserListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: _getUserTypeColor(user['userType']),
-          child: Text(
-            user['name'][0].toUpperCase(),
-            style: AppTextStyles.labelMedium.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: _getUserTypeColor(user['userType']),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              user['name'][0].toUpperCase(),
+              style: AppTextStyles.h5.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
         title: Row(
           children: [
             Expanded(
-              child: Text(
-                user['name'],
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user['name'],
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.charcoal,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    user['email'],
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
             if (user['isVerified'])
-              const Icon(Icons.verified, size: 16, color: AppColors.success),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppColors.success.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.verified,
+                      size: 12,
+                      color: AppColors.success,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Verified',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.success,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(user['email'], style: AppTextStyles.bodySmall),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getUserTypeColor(user['userType']).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    user['userType'].toString().toUpperCase(),
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: _getUserTypeColor(user['userType']),
-                      fontWeight: FontWeight.w600,
-                    ),
+        subtitle: Container(
+          margin: const EdgeInsets.only(top: 8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getUserTypeColor(user['userType']).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _getUserTypeColor(user['userType']).withValues(alpha: 0.2),
+                    width: 1,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Joined ${_formatDate(user['joinDate'])}',
-                  style: AppTextStyles.caption,
+                child: Text(
+                  user['userType'].toString().toUpperCase(),
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: _getUserTypeColor(user['userType']),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.calendar_today,
+                size: 12,
+                color: AppColors.textLight,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Joined ${_formatDate(user['joinDate'])}',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textLight,
+                ),
+              ),
+            ],
+          ),
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
@@ -127,11 +192,11 @@ class UserListItem extends StatelessWidget {
   Color _getUserTypeColor(String userType) {
     switch (userType) {
       case 'admin':
-        return AppColors.error;
+        return AppColors.terracotta;
       case 'host':
-        return AppColors.secondary;
+        return AppColors.deepBlue;
       case 'guest':
-        return AppColors.primary;
+        return AppColors.goldenAmber;
       default:
         return AppColors.textSecondary;
     }

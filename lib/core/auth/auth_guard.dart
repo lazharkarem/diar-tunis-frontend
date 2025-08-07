@@ -19,6 +19,7 @@ class AuthGuard {
     }
 
     if (authState is AuthUnauthenticated || authState is AuthInitial) {
+      print('[AuthGuard] User is unauthenticated, redirecting to login');
       final publicRoutes = ['/splash', '/login', '/register'];
       if (publicRoutes.contains(state.uri.path)) {
         return null;

@@ -1,191 +1,327 @@
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
+import 'package:diar_tunis/features/host/presentation/widgets/host_navigation_wrapper.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/host_stats_card.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/recent_bookings_widget.dart';
 import 'package:flutter/material.dart';
 
-class HostDashboardPage extends StatelessWidget {
+class HostDashboardPage extends StatefulWidget {
   const HostDashboardPage({super.key});
 
   @override
+  State<HostDashboardPage> createState() => _HostDashboardPageState();
+}
+
+class _HostDashboardPageState extends State<HostDashboardPage>
+    with TickerProviderStateMixin {
+  late AnimationController _fadeController;
+  late AnimationController _slideController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _fadeController.forward();
+    _slideController.forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    _slideController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Host Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              // Navigate to notifications
-            },
+    return HostNavigationWrapper(
+      title: 'Dashboard',
+      currentIndex: 0,
+      floatingActionButton: _buildFloatingActionButton(),
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildWelcomeSection(),
+                const SizedBox(height: 32),
+                _buildStatsSection(),
+                const SizedBox(height: 32),
+                _buildQuickActionsSection(),
+                const SizedBox(height: 32),
+                _buildRecentBookingsSection(),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.calendar_today),
-            onPressed: () {
-              // Navigate to calendar
-            },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWelcomeSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary,
+            AppColors.primaryLight,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome section
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.secondary, AppColors.secondaryLight],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                borderRadius: BorderRadius.circular(16),
+                child: const Icon(
+                  Icons.home_outlined,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome back, Host!',
-                    style: AppTextStyles.h3.copyWith(color: Colors.white),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Manage your properties and bookings',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome back!',
+                      style: AppTextStyles.h3.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Your properties are performing great',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              _buildWelcomeStat('3', 'Properties'),
+              const SizedBox(width: 24),
+              _buildWelcomeStat('4.8★', 'Rating'),
+              const SizedBox(width: 24),
+              _buildWelcomeStat('12', 'Bookings'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeStat(String value, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: AppTextStyles.h4.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            color: Colors.white.withValues(alpha: 0.8),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Performance Overview',
+              style: AppTextStyles.h4.copyWith(
+                fontWeight: FontWeight.bold,
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // Stats cards
-            Text('Your Performance', style: AppTextStyles.h4),
-            const SizedBox(height: 16),
-
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.2,
-              children: const [
-                HostStatsCard(
-                  title: 'Properties',
-                  value: '3',
-                  icon: Icons.home,
+            TextButton(
+              onPressed: () {
+                // Navigate to detailed stats
+              },
+              child: Text(
+                'View Details',
+                style: AppTextStyles.labelMedium.copyWith(
                   color: AppColors.primary,
                 ),
-                HostStatsCard(
-                  title: 'This Month',
-                  value: '12',
-                  icon: Icons.book_online,
-                  color: AppColors.success,
-                  subtitle: 'Bookings',
-                ),
-                HostStatsCard(
-                  title: 'Earnings',
-                  value: '\$2,450',
-                  icon: Icons.attach_money,
-                  color: AppColors.secondary,
-                  subtitle: 'This month',
-                ),
-                HostStatsCard(
-                  title: 'Rating',
-                  value: '4.8',
-                  icon: Icons.star,
-                  color: AppColors.warning,
-                  subtitle: 'Average',
-                ),
-              ],
+              ),
             ),
-
-            const SizedBox(height: 32),
-
-            // Quick actions
-            Text('Quick Actions', style: AppTextStyles.h4),
-            const SizedBox(height: 16),
-
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.5,
-              children: [
-                _buildQuickActionCard(
-                  context,
-                  'Add Property',
-                  Icons.add_home,
-                  AppColors.primary,
-                  () {
-                    // Navigate to add property
-                  },
-                ),
-                _buildQuickActionCard(
-                  context,
-                  'View Bookings',
-                  Icons.calendar_view_day,
-                  AppColors.success,
-                  () {
-                    // Navigate to bookings
-                  },
-                ),
-                _buildQuickActionCard(
-                  context,
-                  'Earnings Report',
-                  Icons.analytics,
-                  AppColors.secondary,
-                  () {
-                    // Navigate to earnings
-                  },
-                ),
-                _buildQuickActionCard(
-                  context,
-                  'Messages',
-                  Icons.message,
-                  AppColors.info,
-                  () {
-                    // Navigate to messages
-                  },
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-
-            // Recent bookings
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Recent Bookings', style: AppTextStyles.h4),
-                TextButton(
-                  onPressed: () {
-                    // Navigate to all bookings
-                  },
-                  child: const Text('View All'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            const RecentBookingsWidget(),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to add property
-        },
-        child: const Icon(Icons.add),
-      ),
+        const SizedBox(height: 16),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.1,
+          children: const [
+            HostStatsCard(
+              title: 'Total Properties',
+              value: '3',
+              icon: Icons.home_outlined,
+              color: AppColors.primary,
+              trend: '+1',
+              trendPositive: true,
+            ),
+            HostStatsCard(
+              title: 'This Month',
+              value: '12',
+              icon: Icons.book_online_outlined,
+              color: AppColors.success,
+              subtitle: 'Bookings',
+              trend: '+3',
+              trendPositive: true,
+            ),
+            HostStatsCard(
+              title: 'Total Earnings',
+              value: '\$2,450',
+              icon: Icons.attach_money_outlined,
+              color: AppColors.secondary,
+              subtitle: 'This month',
+              trend: '+15%',
+              trendPositive: true,
+            ),
+            HostStatsCard(
+              title: 'Average Rating',
+              value: '4.8',
+              icon: Icons.star_outline,
+              color: AppColors.warning,
+              subtitle: 'Out of 5',
+              trend: '+0.2',
+              trendPositive: true,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: AppTextStyles.h4.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.3,
+          children: [
+            _buildQuickActionCard(
+              context,
+              'Add Property',
+              Icons.add_home_outlined,
+              AppColors.primary,
+              () {
+                // Navigate to add property
+              },
+            ),
+            _buildQuickActionCard(
+              context,
+              'View Bookings',
+              Icons.calendar_view_day_outlined,
+              AppColors.success,
+              () {
+                // Navigate to bookings
+              },
+            ),
+            _buildQuickActionCard(
+              context,
+              'Earnings Report',
+              Icons.analytics_outlined,
+              AppColors.secondary,
+              () {
+                // Navigate to earnings
+              },
+            ),
+            _buildQuickActionCard(
+              context,
+              'Messages',
+              Icons.message_outlined,
+              AppColors.info,
+              () {
+                // Navigate to messages
+              },
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -196,25 +332,108 @@ class HostDashboardPage extends StatelessWidget {
     Color color,
     VoidCallback onTap,
   ) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 32, color: color),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: AppTextStyles.labelMedium,
-                textAlign: TextAlign.center,
-              ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowLight,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, size: 28, color: color),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildRecentBookingsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Bookings',
+              style: AppTextStyles.h4.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // Navigate to all bookings
+              },
+              child: Text(
+                'View All',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const RecentBookingsWidget(),
+      ],
+    );
+  }
+
+  Widget _buildFloatingActionButton() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryLight],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: FloatingActionButton(
+        onPressed: () {
+          // Navigate to add property
+        },
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
     );
   }

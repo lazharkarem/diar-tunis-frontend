@@ -1,3 +1,5 @@
+import 'package:diar_tunis/app/themes/colors.dart';
+import 'package:diar_tunis/app/themes/text_styles.dart';
 import 'package:diar_tunis/features/shared/domain/entities/property_category.dart';
 import 'package:diar_tunis/features/shared/widgets/loading_widget.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +35,7 @@ class _CategoryChipsState extends State<CategoryChips> {
     return BlocBuilder<PropertiesCubit, PropertiesState>(
       builder: (context, state) {
         if (state is PropertiesLoading) {
-          return const SizedBox(height: 50, child: LoadingWidget());
+          return const SizedBox(height: 60, child: LoadingWidget());
         }
 
         if (state is PropertiesLoaded) {
@@ -49,47 +51,32 @@ class _CategoryChipsState extends State<CategoryChips> {
                 sum + category.propertyCount,
           );
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'Property Types',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 50,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  itemCount: categories.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _CategoryChip(
-                        label: 'All',
-                        count: totalCount,
-                        isSelected: _selectedCategory == null,
-                        onTap: () => _selectCategory(null),
-                      );
-                    }
+          return SizedBox(
+            height: 60,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: categories.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return _CategoryChip(
+                    label: 'All',
+                    count: totalCount,
+                    isSelected: _selectedCategory == null,
+                    onTap: () => _selectCategory(null),
+                  );
+                }
 
-                    final category = categories[index - 1];
-                    return _CategoryChip(
-                      label: category.name,
-                      count: category.propertyCount,
-                      icon: _getCategoryIcon(category.icon),
-                      isSelected: _selectedCategory?.id == category.id,
-                      onTap: () => _selectCategory(category),
-                    );
-                  },
-                ),
-              ),
-            ],
+                final category = categories[index - 1];
+                return _CategoryChip(
+                  label: category.name,
+                  count: category.propertyCount,
+                  icon: _getCategoryIcon(category.icon),
+                  isSelected: _selectedCategory?.id == category.id,
+                  onTap: () => _selectCategory(category),
+                );
+              },
+            ),
           );
         }
 
@@ -140,35 +127,76 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        avatar: icon != null
-            ? Icon(
-                icon,
-                size: 16,
-                color: isSelected
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-              )
-            : null,
-        label: Text('$label ($count)'),
-        selected: isSelected,
-        onSelected: (_) => onTap(),
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-        selectedColor: Theme.of(context).colorScheme.primary,
-        labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: isSelected
-              ? Theme.of(context).colorScheme.onPrimary
-              : Theme.of(context).colorScheme.onSurfaceVariant,
+    return Container(
+      margin: const EdgeInsets.only(right: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary : AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : AppColors.border,
+                width: 1,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: AppColors.shadowLight,
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(
+                    icon,
+                    size: 18,
+                    color: isSelected ? Colors.white : AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: isSelected ? Colors.white : AppColors.textPrimary,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$count properties',
+                      style: AppTextStyles.caption.copyWith(
+                        color: isSelected
+                            ? Colors.white.withValues(alpha: 0.8)
+                            : AppColors.textSecondary,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-        side: BorderSide(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : Colors.transparent,
-          width: 1,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

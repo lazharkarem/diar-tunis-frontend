@@ -20,9 +20,20 @@ class AdminStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -30,7 +41,14 @@ class AdminStatsCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(icon, color: color, size: 22),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
                 if (trend != null)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -39,39 +57,47 @@ class AdminStatsCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      trend!,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.success,
-                        fontWeight: FontWeight.w600,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.success.withValues(alpha: 0.2),
+                        width: 1,
                       ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.trending_up,
+                          size: 12,
+                          color: AppColors.success,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          trend!,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 10),
-            Flexible(
-              child: Text(
-                value,
-                style: AppTextStyles.h4.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: AppTextStyles.h4.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 3),
-            Flexible(
-              child: Text(
-                title,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 2),
+            Text(
+              title,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],

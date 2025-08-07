@@ -1,4 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:diar_tunis/app/themes/colors.dart';
+import 'package:diar_tunis/app/themes/text_styles.dart';
 import 'package:diar_tunis/features/admin/domain/entities/property.dart';
 import 'package:diar_tunis/features/shared/widgets/custom_error_widget.dart';
 import 'package:diar_tunis/features/shared/widgets/loading_widget.dart';
@@ -27,12 +29,12 @@ class _FeaturedPropertiesState extends State<FeaturedProperties> {
     return BlocBuilder<PropertiesCubit, PropertiesState>(
       builder: (context, state) {
         if (state is PropertiesLoading) {
-          return const SizedBox(height: 200, child: LoadingWidget());
+          return const SizedBox(height: 300, child: LoadingWidget());
         }
 
         if (state is PropertiesError) {
           return SizedBox(
-            height: 200,
+            height: 300,
             child: CustomErrorWidget(
               message: state.message,
               onRetry: () => context.read<PropertiesCubit>().loadInitialData(),
@@ -44,46 +46,50 @@ class _FeaturedPropertiesState extends State<FeaturedProperties> {
           final featuredProperties = state.featuredProperties;
 
           if (featuredProperties.isEmpty) {
-            return const SizedBox(
-              height: 200,
+            return Container(
+              height: 300,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
               child: Center(
-                child: Text(
-                  'No featured properties available',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.home_outlined,
+                      size: 48,
+                      color: AppColors.textLight,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No featured properties available',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
           }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'Featured Properties',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 280,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  itemCount: featuredProperties.length,
-                  itemBuilder: (context, index) {
-                    final property = featuredProperties[index];
-                    return _PropertyCard(
-                      property: property,
-                      onTap: () => _navigateToPropertyDetail(context, property),
-                    );
-                  },
-                ),
-              ),
-            ],
+          return SizedBox(
+            height: 300,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: featuredProperties.length,
+              itemBuilder: (context, index) {
+                final property = featuredProperties[index];
+                return _PropertyCard(
+                  property: property,
+                  onTap: () => _navigateToPropertyDetail(context, property),
+                );
+              },
+            ),
           );
         }
 
@@ -110,105 +116,216 @@ class _PropertyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 250,
+      width: 280,
       margin: const EdgeInsets.only(right: 16),
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Material(
+        color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Property Image
-              SizedBox(
-                height: 160,
-                width: double.infinity,
-                child: CachedNetworkImage(
-                  imageUrl: property.primaryImage?.imageUrl ?? '',
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey[300],
-                    child: const Center(child: CircularProgressIndicator()),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Icon(Icons.home, size: 48, color: Colors.grey),
-                    ),
-                  ),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadowLight,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-              ),
-
-              // Property Details
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Property Image
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: Stack(
                     children: [
-                      // Title
-                      Text(
-                        property.title,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-
-                      // Location
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 14,
-                            color: Colors.grey[600],
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              '${property.city}, ${property.state}',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: Colors.grey[600]),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                      SizedBox(
+                        height: 180,
+                        width: double.infinity,
+                        child: CachedNetworkImage(
+                          imageUrl: property.primaryImage?.imageUrl ?? '',
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: AppColors.surfaceVariant,
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                              ),
                             ),
                           ),
-                        ],
-                      ),
-
-                      const Spacer(),
-
-                      // Price and Rating
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '\$${property.pricePerNight.toStringAsFixed(0)}/night',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
-                                ),
+                          errorWidget: (context, url, error) => Container(
+                            color: AppColors.surfaceVariant,
+                            child: const Center(
+                              child: Icon(
+                                Icons.home_outlined,
+                                size: 48,
+                                color: AppColors.textLight,
+                              ),
+                            ),
                           ),
-                          Row(
+                        ),
+                      ),
+                      // Favorite button
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.favorite_border,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                      // Rating badge
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.star, size: 14, color: Colors.amber),
-                              const SizedBox(width: 2),
+                              const Icon(
+                                Icons.star,
+                                size: 12,
+                                color: AppColors.warning,
+                              ),
+                              const SizedBox(width: 4),
                               Text(
-                                '4.5', // You might want to calculate this from reviews
-                                style: Theme.of(context).textTheme.bodySmall,
+                                '4.5',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+
+                // Property Details
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        Text(
+                          property.title,
+                          style: AppTextStyles.h6.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Location
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: AppColors.info.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.location_on_outlined,
+                                size: 12,
+                                color: AppColors.info,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                '${property.city}, ${property.state}',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const Spacer(),
+
+                        // Price and Rating
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '\$${property.pricePerNight.toStringAsFixed(0)}',
+                                  style: AppTextStyles.h5.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                Text(
+                                  'per night',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    size: 12,
+                                    color: AppColors.success,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '4.5',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.success,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

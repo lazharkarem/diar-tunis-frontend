@@ -1,5 +1,7 @@
 import 'package:diar_tunis/app/themes/colors.dart';
+import 'package:diar_tunis/app/themes/text_styles.dart';
 import 'package:diar_tunis/features/guest/presentation/widgets/booking_history_item.dart';
+import 'package:diar_tunis/features/guest/presentation/widgets/guest_navigation_wrapper.dart';
 import 'package:flutter/material.dart';
 
 class BookingHistoryPage extends StatefulWidget {
@@ -27,24 +29,40 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Bookings'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Upcoming'),
-            Tab(text: 'Completed'),
-            Tab(text: 'Cancelled'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+    return GuestNavigationWrapper(
+      title: 'My Bookings',
+      currentIndex: 3,
+      child: Column(
         children: [
-          _buildBookingList('upcoming'),
-          _buildBookingList('completed'),
-          _buildBookingList('cancelled'),
+          Container(
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary,
+              indicatorColor: AppColors.primary,
+              indicatorWeight: 3,
+              labelStyle: AppTextStyles.labelMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: AppTextStyles.labelMedium,
+              tabs: const [
+                Tab(text: 'Upcoming'),
+                Tab(text: 'Completed'),
+                Tab(text: 'Cancelled'),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildBookingList('upcoming'),
+                _buildBookingList('completed'),
+                _buildBookingList('cancelled'),
+              ],
+            ),
+          ),
         ],
       ),
     );
