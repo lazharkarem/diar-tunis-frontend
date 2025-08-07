@@ -32,6 +32,11 @@ class AppRouter {
         builder: (BuildContext context, GoRouterState state) =>
             const SplashPage(),
       ),
+      // Fallback route for root path
+      GoRoute(
+        path: '/',
+        redirect: (context, state) => AppRoutes.splash,
+      ),
       GoRoute(
         path: AppRoutes.login,
         builder: (BuildContext context, GoRouterState state) =>

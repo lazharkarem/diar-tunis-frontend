@@ -1,9 +1,5 @@
 import 'package:diar_tunis/features/authentication/domain/entities/user.dart';
-import 'package:json_annotation/json_annotation.dart';
 
-part 'user_model.g.dart';
-
-@JsonSerializable()
 class UserModel {
   final String id;
   final String email;
@@ -29,10 +25,54 @@ class UserModel {
     required this.updatedAt,
   });
 
-  // Convert to domain entity
-  User toDomain() {
-    print('Converting UserModel to Domain - current userType: $userType');
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    print('=== UserModel.fromJson DEBUG ===');
+    print('Input JSON: $json');
+    print('JSON keys: ${json.keys.toList()}');
+    print('user_type value: ${json['user_type']}');
+    print('user_type type: ${json['user_type']?.runtimeType}');
+    
+    // Handle name field splitting
+    final name = json['name'] as String? ?? '';
+    final nameParts = name.split(' ');
 
+    final userType = _toUserType(json['user_type']);
+    print('Parsed userType: $userType');
+
+    return UserModel(
+      id: json['id']?.toString() ?? '',
+      email: json['email'] as String? ?? '',
+      firstName: nameParts.isNotEmpty ? nameParts[0] : '',
+      lastName: nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '',
+      phone: json['phone'] as String? ?? json['phone_number'] as String?,
+      avatar: json['avatar'] as String? ?? json['profile_picture'] as String?,
+      userType: userType,
+      isVerified: json['email_verified_at'] != null,
+      createdAt: DateTime.parse(
+        json['created_at'] as String? ?? DateTime.now().toString(),
+      ),
+      updatedAt: DateTime.parse(
+        json['updated_at'] as String? ?? DateTime.now().toString(),
+      ),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'firstName': firstName,
+      'lastName': lastName,
+      'phone': phone,
+      'avatar': avatar,
+      'user_type': userType,
+      'isVerified': isVerified,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
+  User toDomain() {
     return User(
       id: id,
       email: email,
@@ -40,14 +80,13 @@ class UserModel {
       lastName: lastName,
       phone: phone,
       avatar: avatar,
-      userType: userType.toLowerCase(), // Ensure lowercase
+      userType: userType,
       isVerified: isVerified,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
   }
 
-  // Convert from domain entity
   factory UserModel.fromDomain(User user) {
     return UserModel(
       id: user.id,
@@ -63,48 +102,36 @@ class UserModel {
     );
   }
 
-  // JSON serialization
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    // Handle Laravel's 'name' field by splitting into firstName and lastName
-    final name = json['name'] as String? ?? '';
-    final nameParts = name.split(' ');
-
-    // Extract user_type with proper fallback and case handling
-    final rawUserType = json['user_type'] as String?;
-    final userType = rawUserType?.toLowerCase() ?? 'guest';
-
-    print(
-      'Creating UserModel from JSON - raw user_type: $rawUserType, processed: $userType',
-    );
-
-    return UserModel(
-      id: json['id']?.toString() ?? '',
-      email: json['email'] as String? ?? '',
-      firstName: nameParts.isNotEmpty ? nameParts[0] : '',
-      lastName: nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '',
-      phone: json['phone_number'] as String?,
-      avatar: json['profile_picture'] as String?,
-      userType: userType, // Use the processed value
-      isVerified: json['email_verified_at'] != null,
-      createdAt:
-          DateTime.tryParse(json['created_at'] as String? ?? '') ??
-          DateTime.now(),
-      updatedAt:
-          DateTime.tryParse(json['updated_at'] as String? ?? '') ??
-          DateTime.now(),
-    );
+  static String _toIntString(dynamic value) {
+    if (value == null) return '';
+    if (value is int) return value.toString();
+    if (value is String) return value;
+    return value.toString();
   }
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': '$firstName $lastName'.trim(),
-      'email': email,
-      'phone_number': phone,
-      'profile_picture': avatar,
-      'user_type': userType,
-      'email_verified_at': isVerified ? DateTime.now().toIso8601String() : null,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-    };
+
+  static DateTime _toDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is String) return DateTime.parse(value);
+    if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
+    return DateTime.now();
+  }
+
+  static String _toUserType(dynamic value) {
+    print('=== _toUserType DEBUG ===');
+    print('Input value: $value');
+    print('Input type: ${value.runtimeType}');
+    
+    if (value == null) {
+      print('Value is null, returning guest');
+      return 'guest';
+    }
+    if (value is String) {
+      final result = value.toLowerCase().trim();
+      print('Value is String, returning: $result');
+      return result;
+    }
+    final result = value.toString().toLowerCase().trim();
+    print('Value converted to String, returning: $result');
+    return result;
   }
 }

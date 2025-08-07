@@ -31,7 +31,7 @@ class UserModel extends Equatable {
       id: json['id'],
       name: json['name'],
       email: json['email'],
-      userType: json['user_type'],
+      userType: json['user_type']?.toString().toLowerCase().trim() ?? 'guest',
       isActive: json['is_active'] ?? true,
       profile: json['profile'] != null
           ? UserProfileModel.fromJson(json['profile'])

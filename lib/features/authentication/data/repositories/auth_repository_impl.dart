@@ -62,7 +62,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     try {
-      print('Attempting login with email: $email');
+      print('[AuthRepository] Attempting login with email: $email');
       final response = await _remoteDataSource.login(
         email: email,
         password: password,
@@ -70,19 +70,24 @@ class AuthRepositoryImpl implements AuthRepository {
 
       if (response.isSuccess && response.data != null) {
         final authResponse = response.data!;
-        print('Raw API response: ${authResponse.toJson()}'); // Add this line
+        print('[AuthRepository] Login successful. User type: ${authResponse.user.userType}');
+        print('[AuthRepository] User model: ${authResponse.user.toString()}');
+        print('[AuthRepository] User type from model: ${authResponse.user.userType}');
 
         await _localDataSource.cacheToken(authResponse.accessToken);
         await _localDataSource.cacheUser(authResponse.user);
 
         final domainUser = authResponse.user.toDomain();
-        print('Converted domain user: ${domainUser.toString()}');
+        print('[AuthRepository] Domain user: ${domainUser.toString()}');
+        print('[AuthRepository] Domain user type: ${domainUser.userType}');
 
         return Right(domainUser);
       } else {
+        print('[AuthRepository] Login failed: ${response.message}');
         return Left(ServerFailure(message: response.message));
       }
     } catch (e) {
+      print('[AuthRepository] Login error: ${e.toString()}');
       return Left(ServerFailure(message: 'Login failed: ${e.toString()}'));
     }
   }

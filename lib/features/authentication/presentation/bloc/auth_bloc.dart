@@ -38,7 +38,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       (failure) => emit(AuthError(message: failure.message)),
-      (user) => emit(AuthAuthenticated(user: user)),
+      (user) {
+        print('[AuthBloc] Login successful. User type: ${user.userType}');
+        print('[AuthBloc] User: ${user.toString()}');
+        emit(AuthAuthenticated(user: user));
+      },
     );
   }
 
@@ -89,7 +93,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       (failure) => emit(AuthUnauthenticated()),
-      (user) => emit(AuthAuthenticated(user: user)),
+      (user) {
+        print('[AuthBloc] Auth check successful. User type: ${user.userType}');
+        print('[AuthBloc] User: ${user.toString()}');
+        emit(AuthAuthenticated(user: user));
+      },
     );
   }
 }

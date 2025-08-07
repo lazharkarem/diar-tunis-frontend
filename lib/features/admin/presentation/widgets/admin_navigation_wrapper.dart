@@ -1,3 +1,4 @@
+import 'package:diar_tunis/app/routes/app_routes.dart';
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_event.dart';
@@ -29,7 +30,7 @@ class AdminNavigationWrapper extends StatelessWidget {
         // Prevent app from closing on back button press
         // Instead, navigate to login page or handle gracefully
         if (currentIndex != 0) {
-          context.go('/admin_dashboard');
+          context.go(AppRoutes.adminHome);
           return;
         }
         // Show confirmation dialog for dashboard
@@ -46,7 +47,7 @@ class AdminNavigationWrapper extends StatelessWidget {
             ? null
             : IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.go('/admin_dashboard'),
+                onPressed: () => context.go(AppRoutes.adminHome),
               ),
           actions: [
             IconButton(
@@ -132,18 +133,31 @@ class AdminNavigationWrapper extends StatelessWidget {
             ),
           ],
           onTap: (index) {
+            print('[AdminNavigationWrapper] Bottom nav tapped: index=$index, currentIndex=$currentIndex');
             switch (index) {
               case 0:
-                if (currentIndex != 0) context.go('/admin_dashboard');
+                if (currentIndex != 0) {
+                  print('[AdminNavigationWrapper] Navigating to admin home');
+                  context.go(AppRoutes.adminHome);
+                }
                 break;
               case 1:
-                if (currentIndex != 1) context.go('/admin_users');
+                if (currentIndex != 1) {
+                  print('[AdminNavigationWrapper] Navigating to admin users');
+                  context.go(AppRoutes.adminUsers);
+                }
                 break;
               case 2:
-                if (currentIndex != 2) context.go('/admin_properties');
+                if (currentIndex != 2) {
+                  print('[AdminNavigationWrapper] Navigating to admin properties');
+                  context.go(AppRoutes.adminProperties);
+                }
                 break;
               case 3:
-                if (currentIndex != 3) context.go('/admin_bookings');
+                if (currentIndex != 3) {
+                  print('[AdminNavigationWrapper] Navigating to admin bookings');
+                  context.go(AppRoutes.adminBookings);
+                }
                 break;
             }
           },

@@ -1,3 +1,4 @@
+import 'package:diar_tunis/app/routes/app_routes.dart';
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
 import 'package:diar_tunis/features/admin/presentation/widgets/admin_navigation_wrapper.dart';
@@ -114,7 +115,7 @@ class AdminDashboardPage extends StatelessWidget {
                   Icons.people_outline,
                   AppColors.primary,
                   () {
-                    context.go('/admin_users');
+                    context.go(AppRoutes.adminUsers);
                   },
                 ),
                 _buildQuickActionCard(
@@ -123,7 +124,7 @@ class AdminDashboardPage extends StatelessWidget {
                   Icons.home_outlined,
                   AppColors.secondary,
                   () {
-                    context.go('/admin_properties');
+                    context.go(AppRoutes.adminProperties);
                   },
                 ),
                 _buildQuickActionCard(
@@ -132,7 +133,7 @@ class AdminDashboardPage extends StatelessWidget {
                   Icons.book_outlined,
                   AppColors.success,
                   () {
-                    context.go('/admin_bookings');
+                    context.go(AppRoutes.adminBookings);
                   },
                 ),
                 _buildQuickActionCard(

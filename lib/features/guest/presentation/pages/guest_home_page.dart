@@ -49,7 +49,7 @@ class _GuestHomePageState extends State<GuestHomePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         Text(
                           'Discover Tunisia',
                           style: AppTextStyles.h2.copyWith(color: Colors.white),
@@ -61,7 +61,7 @@ class _GuestHomePageState extends State<GuestHomePage> {
                             color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         const SearchBarWidget(),
                       ],
                     ),

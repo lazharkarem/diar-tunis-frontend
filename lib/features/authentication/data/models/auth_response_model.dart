@@ -12,10 +12,15 @@ class AuthResponseModel {
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
+    print('=== AuthResponseModel.fromJson DEBUG ===');
+    print('Input JSON: $json');
+    print('JSON keys: ${json.keys.toList()}');
+    
+    // The API service extracts the 'data' part, so we're receiving the data structure directly
     return AuthResponseModel(
-      success: json['success'] as bool? ?? false,
+      success: true, // Since we're here, the API call was successful
       message: json['message'] as String? ?? '',
-      data: AuthDataModel.fromJson(json['data'] as Map<String, dynamic>? ?? {}),
+      data: AuthDataModel.fromJson(json),
     );
   }
 
@@ -41,8 +46,18 @@ class AuthDataModel {
   });
 
   factory AuthDataModel.fromJson(Map<String, dynamic> json) {
+    print('=== AuthDataModel.fromJson DEBUG ===');
+    print('Input JSON: $json');
+    print('JSON keys: ${json.keys.toList()}');
+    print('user value: ${json['user']}');
+    print('user type: ${json['user']?.runtimeType}');
+    
+    final userJson = json['user'] as Map<String, dynamic>? ?? {};
+    print('userJson: $userJson');
+    print('userJson keys: ${userJson.keys.toList()}');
+    
     return AuthDataModel(
-      user: UserModel.fromJson(json['user'] as Map<String, dynamic>? ?? {}),
+      user: UserModel.fromJson(userJson),
       accessToken: json['access_token'] as String? ?? '',
       tokenType: json['token_type'] as String? ?? 'Bearer',
     );
