@@ -1,12 +1,23 @@
 import 'dart:io';
 
 import 'package:diar_tunis/core/constants/api_constants.dart';
+import 'package:diar_tunis/core/constants/storage_constants.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  // static const String baseUrl = 'http://your-backend-url.com/api';
-  static const String baseUrl = ApiConstants.baseUrl;
+  // Resolve correct base URL by platform (Android emulator needs 10.0.2.2)
+  static String get baseUrl {
+    try {
+      if (Platform.isAndroid) {
+        // Use Android emulator loopback
+        return 'http://10.0.2.2:8000/api';
+      }
+    } catch (_) {
+      // Platform may not be available (e.g., tests); fallback below
+    }
+    return ApiConstants.baseUrl;
+  }
 
   late Dio _dio;
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
@@ -64,17 +75,28 @@ class ApiService {
   // Token management
   Future<String?> getToken() async {
     try {
-      return await _storage.read(key: 'auth_token');
+      // Try common keys for backward compatibility
+      final tokenAccess = await _storage.read(key: StorageConstants.accessToken);
+      if (tokenAccess != null && tokenAccess.isNotEmpty) return tokenAccess;
+      final tokenCached = await _storage.read(key: 'CACHED_TOKEN');
+      if (tokenCached != null && tokenCached.isNotEmpty) return tokenCached;
+      final tokenLegacy = await _storage.read(key: 'auth_token');
+      return tokenLegacy;
     } catch (e) {
       return null;
     }
   }
 
   Future<void> saveToken(String token) async {
+    // Write to all known keys to keep systems in sync
+    await _storage.write(key: StorageConstants.accessToken, value: token);
+    await _storage.write(key: 'CACHED_TOKEN', value: token);
     await _storage.write(key: 'auth_token', value: token);
   }
 
   Future<void> clearToken() async {
+    await _storage.delete(key: StorageConstants.accessToken);
+    await _storage.delete(key: 'CACHED_TOKEN');
     await _storage.delete(key: 'auth_token');
   }
 

@@ -16,6 +16,7 @@ import 'package:diar_tunis/features/authentication/data/datasources/auth_remote_
 import 'package:diar_tunis/features/authentication/data/repositories/auth_repository_impl.dart';
 import 'package:diar_tunis/features/authentication/domain/repositories/auth_repository.dart';
 import 'package:diar_tunis/features/authentication/domain/usecases/check_auth_status_usecase.dart';
+import 'package:diar_tunis/features/authentication/domain/usecases/get_current_user_usecase.dart';
 import 'package:diar_tunis/features/authentication/domain/usecases/get_statistics_usecase.dart';
 import 'package:diar_tunis/features/authentication/domain/usecases/get_user_profile_usecase.dart';
 import 'package:diar_tunis/features/authentication/domain/usecases/login_usecase.dart';
@@ -60,8 +61,9 @@ Future<void> init() async {
     () => AuthBloc(
       loginUseCase: sl(),
       registerUseCase: sl(),
-      getUserProfileUseCase: sl(),
       logoutUseCase: sl(),
+      checkAuthStatusUseCase: sl(),
+      getCurrentUserUseCase: sl(),
     ),
   );
 
@@ -88,11 +90,11 @@ Future<void> init() async {
   // Use Cases - Authentication
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
-  // sl.registerLazySingleton(() => GetUserProfileUseCase(sl()));
-  sl.registerLazySingleton(() => GetProfileUseCase(sl())); // NEW
-  sl.registerLazySingleton(() => UpdateProfileUseCase(sl())); // NEW
-  sl.registerLazySingleton(() => CheckAuthStatusUseCase(sl())); // NEW
-  sl.registerLazySingleton(() => GetStatisticsUseCase(sl())); // NEW
+  sl.registerLazySingleton(() => GetProfileUseCase(sl()));
+  sl.registerLazySingleton(() => GetCurrentUserUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateProfileUseCase(sl()));
+  sl.registerLazySingleton(() => CheckAuthStatusUseCase(sl()));
+  sl.registerLazySingleton(() => GetStatisticsUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
 
   // Use Cases - Admin

@@ -2,6 +2,7 @@ import 'package:diar_tunis/app/themes/app_theme.dart';
 import 'package:diar_tunis/app/routes/app_router.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:diar_tunis/features/properties/presentation/cubit/properties_cubit.dart';
+import 'package:diar_tunis/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:diar_tunis/injection_container.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,11 +22,13 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
         BlocProvider(create: (_) => di.sl<PropertiesCubit>()),
+        BlocProvider(create: (_) => di.sl<AdminBloc>()),
       ],
       child: MaterialApp.router(
         title: 'Diar Tunis',
         theme: AppTheme.lightTheme,
         routerConfig: AppRouter.router,
+        debugShowCheckedModeBanner: false,
       ),
     );
   }

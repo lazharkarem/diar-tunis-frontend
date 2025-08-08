@@ -1,8 +1,11 @@
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
+import 'package:diar_tunis/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:diar_tunis/features/admin/presentation/widgets/admin_navigation_wrapper.dart';
 import 'package:diar_tunis/features/admin/presentation/widgets/user_list_item.dart';
+import 'package:diar_tunis/features/authentication/domain/entities/user.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class UserManagementPage extends StatefulWidget {
   const UserManagementPage({super.key});
@@ -20,6 +23,8 @@ class _UserManagementPageState extends State<UserManagementPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    // Load users when page initializes
+    context.read<AdminBloc>().add(GetAllUsersEvent());
   }
 
   @override
@@ -158,14 +163,63 @@ class _UserManagementPageState extends State<UserManagementPage>
 
             // User list
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildUserList('all'),
-                  _buildUserList('guest'),
-                  _buildUserList('host'),
-                  _buildUserList('admin'),
-                ],
+              child: BlocBuilder<AdminBloc, AdminState>(
+                builder: (context, state) {
+                  if (state is AdminLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (state is UsersLoaded) {
+                    return TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildUserList(state.users, 'all'),
+                        _buildUserList(state.users, 'guest'),
+                        _buildUserList(state.users, 'host'),
+                        _buildUserList(state.users, 'admin'),
+                      ],
+                    );
+                  } else if (state is AdminError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: AppColors.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error loading users',
+                            style: AppTextStyles.h4.copyWith(
+                              color: AppColors.error,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            state.message,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              context.read<AdminBloc>().add(GetAllUsersEvent());
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else {
+                    return const Center(
+                      child: Text('No users found'),
+                    );
+                  }
+                },
               ),
             ),
           ],
@@ -174,38 +228,64 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
   }
 
-  Widget _buildUserList(String userType) {
+  Widget _buildUserList(List<User> users, String userType) {
+    // Filter users based on type
+    final filteredUsers = userType == 'all' 
+        ? users 
+        : users.where((user) => user.userType?.toLowerCase() == userType).toList();
+
+    if (filteredUsers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 64,
+              color: AppColors.textLight,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No ${userType == 'all' ? '' : userType} users found',
+              style: AppTextStyles.h4.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: 20, // Replace with actual data
+      itemCount: filteredUsers.length,
       itemBuilder: (context, index) {
+        final user = filteredUsers[index];
         return UserListItem(
-          user: _getDummyUser(index, userType),
+          user: {
+            'id': user.id.toString(),
+            'name': '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim(),
+            'email': user.email,
+            'userType': user.userType ?? 'guest',
+            'isVerified': user.isVerified ?? false,
+            'joinDate': user.createdAt,
+            'avatar': user.avatar,
+          },
           onTap: () {
-            _showUserDetailsDialog(context, index);
+            _showUserDetailsDialog(context, user);
           },
           onEdit: () {
-            _showEditUserDialog(context, index);
+            _showEditUserDialog(context, user);
           },
           onDelete: () {
-            _showDeleteConfirmation(context, index);
+            _showDeleteConfirmation(context, user);
           },
         );
       },
     );
   }
 
-  Map<String, dynamic> _getDummyUser(int index, String type) {
-    return {
-      'id': 'user_$index',
-      'name': 'User ${index + 1}',
-      'email': 'user${index + 1}@example.com',
-      'userType': type == 'all' ? ['guest', 'host', 'admin'][index % 3] : type,
-      'isVerified': index % 2 == 0,
-      'joinDate': DateTime.now().subtract(Duration(days: index * 10)),
-      'avatar': null,
-    };
-  }
+
 
   void _showFilterDialog(BuildContext context) {
     showDialog(
@@ -261,12 +341,21 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
   }
 
-  void _showUserDetailsDialog(BuildContext context, int index) {
+  void _showUserDetailsDialog(BuildContext context, User user) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('User ${index + 1} Details'),
-        content: const Text('User details would go here'),
+        title: Text('${user.firstName ?? ''} ${user.lastName ?? ''} Details'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Email: ${user.email}'),
+            Text('Type: ${user.userType ?? 'N/A'}'),
+            Text('Verified: ${user.isVerified ?? false ? 'Yes' : 'No'}'),
+            Text('Created: ${user.createdAt?.toString() ?? 'N/A'}'),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -277,11 +366,11 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
   }
 
-  void _showEditUserDialog(BuildContext context, int index) {
+  void _showEditUserDialog(BuildContext context, User user) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit User ${index + 1}'),
+        title: Text('Edit ${user.firstName ?? ''} ${user.lastName ?? ''}'),
         content: const Text('Edit user functionality would go here'),
         actions: [
           TextButton(
@@ -297,12 +386,12 @@ class _UserManagementPageState extends State<UserManagementPage>
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, int index) {
+  void _showDeleteConfirmation(BuildContext context, User user) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete User'),
-        content: Text('Are you sure you want to delete User ${index + 1}?'),
+        content: Text('Are you sure you want to delete ${user.firstName ?? ''} ${user.lastName ?? ''}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -313,7 +402,7 @@ class _UserManagementPageState extends State<UserManagementPage>
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('User ${index + 1} deleted'),
+                  content: Text('${user.firstName ?? ''} ${user.lastName ?? ''} deleted'),
                   backgroundColor: AppColors.error,
                 ),
               );

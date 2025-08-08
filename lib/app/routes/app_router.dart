@@ -15,6 +15,7 @@ import 'package:diar_tunis/features/host/presentation/pages/bookings_list_page.d
 import 'package:diar_tunis/features/host/presentation/pages/earnings_page.dart';
 import 'package:diar_tunis/features/host/presentation/pages/host_dashboard_page.dart';
 import 'package:diar_tunis/features/host/presentation/pages/my_properties_page.dart';
+import 'package:diar_tunis/features/shared/presentation/pages/onboarding_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,6 +37,11 @@ class AppRouter {
       GoRoute(
         path: '/',
         redirect: (context, state) => AppRoutes.splash,
+      ),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (BuildContext context, GoRouterState state) =>
+            const OnboardingPage(),
       ),
       GoRoute(
         path: AppRoutes.login,

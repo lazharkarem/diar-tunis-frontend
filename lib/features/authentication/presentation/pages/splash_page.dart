@@ -1,6 +1,7 @@
 import 'package:diar_tunis/app/routes/app_routes.dart';
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
+import 'package:diar_tunis/core/storage/shared_preferences_helper.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_event.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_state.dart';
@@ -67,9 +68,18 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     _textController.forward();
 
     // Check authentication status after a delay
-    Timer(const Duration(milliseconds: 2500), () {
+    Timer(const Duration(milliseconds: 2500), () async {
       if (mounted) {
-        context.read<AuthBloc>().add(AuthCheckRequested());
+        // Check if onboarding has been completed
+        final onboardingCompleted = await SharedPreferencesHelper.isOnboardingCompleted();
+        
+        if (!onboardingCompleted) {
+          // First time user - show onboarding
+          context.go(AppRoutes.onboarding);
+        } else {
+          // Returning user - check authentication
+          context.read<AuthBloc>().add(AuthCheckRequested());
+        }
       }
     });
   }

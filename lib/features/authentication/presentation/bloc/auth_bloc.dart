@@ -1,4 +1,5 @@
-import 'package:diar_tunis/features/authentication/domain/usecases/get_user_profile_usecase.dart';
+import 'package:diar_tunis/features/authentication/domain/usecases/check_auth_status_usecase.dart';
+import 'package:diar_tunis/features/authentication/domain/usecases/get_current_user_usecase.dart';
 import 'package:diar_tunis/features/authentication/domain/usecases/login_usecase.dart';
 import 'package:diar_tunis/features/authentication/domain/usecases/logout_usecase.dart';
 import 'package:diar_tunis/features/authentication/domain/usecases/register_usecase.dart';
@@ -12,13 +13,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
   final RegisterUseCase registerUseCase;
   final LogoutUseCase logoutUseCase;
-  final GetProfileUseCase getUserProfileUseCase;
+  final CheckAuthStatusUseCase checkAuthStatusUseCase;
+  final GetCurrentUserUseCase getCurrentUserUseCase;
 
   AuthBloc({
     required this.loginUseCase,
     required this.registerUseCase,
     required this.logoutUseCase,
-    required this.getUserProfileUseCase,
+    required this.checkAuthStatusUseCase,
+    required this.getCurrentUserUseCase,
   }) : super(AuthInitial()) {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
@@ -96,15 +99,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    final result = await getUserProfileUseCase(NoParams());
-
-    result.fold(
-      (failure) => emit(AuthUnauthenticated()),
-      (user) {
-        print('[AuthBloc] Auth check successful. User type: ${user.userType}');
-        print('[AuthBloc] User: ${user.toString()}');
-        emit(AuthAuthenticated(user: user));
-      },
+    // First check if user is logged in
+    final isLoggedInResult = await checkAuthStatusUseCase(NoParams());
+    
+    final isLoggedIn = isLoggedInResult.fold(
+      (failure) => false,
+      (loggedIn) => loggedIn,
     );
+
+    if (isLoggedIn) {
+      // User is logged in, get current user
+      final userResult = await getCurrentUserUseCase(NoParams());
+      
+      userResult.fold(
+        (failure) => emit(AuthUnauthenticated()),
+        (user) {
+          print('[AuthBloc] Auth check successful. User type: ${user.userType}');
+          print('[AuthBloc] User: ${user.toString()}');
+          emit(AuthAuthenticated(user: user));
+        },
+      );
+    } else {
+      emit(AuthUnauthenticated());
+    }
   }
 }

@@ -404,7 +404,7 @@ class _EarningsPageState extends State<EarningsPage>
           itemBuilder: (context, index) {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
+              decoration:BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [

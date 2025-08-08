@@ -32,8 +32,21 @@ class UserModel {
     print('user_type value: ${json['user_type']}');
     print('user_type type: ${json['user_type']?.runtimeType}');
     
-    // Handle name field splitting
-    final name = json['name'] as String? ?? '';
+    // Handle name field splitting - check multiple possible field names
+    String name = '';
+    if (json['name'] != null) {
+      name = json['name'] as String;
+    } else if (json['full_name'] != null) {
+      name = json['full_name'] as String;
+    } else if (json['display_name'] != null) {
+      name = json['display_name'] as String;
+    } else {
+      // Try to construct name from first_name and last_name
+      final firstName = json['first_name'] as String? ?? '';
+      final lastName = json['last_name'] as String? ?? '';
+      name = '$firstName $lastName'.trim();
+    }
+    
     final nameParts = name.split(' ');
 
     final userType = _toUserType(json['user_type']);

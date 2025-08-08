@@ -44,7 +44,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
       if (response.isSuccess && response.data != null) {
         final authResponse = response.data!;
-        await _localDataSource.cacheToken(authResponse.accessToken);
+         // Persist token in secure storage via both local datasource and ApiService helpers
+         await _localDataSource.cacheToken(authResponse.accessToken);
         return Right(authResponse.user.toDomain());
       } else {
         return Left(ServerFailure(message: response.message));
@@ -74,7 +75,7 @@ class AuthRepositoryImpl implements AuthRepository {
         print('[AuthRepository] User model: ${authResponse.user.toString()}');
         print('[AuthRepository] User type from model: ${authResponse.user.userType}');
 
-        await _localDataSource.cacheToken(authResponse.accessToken);
+         await _localDataSource.cacheToken(authResponse.accessToken);
         await _localDataSource.cacheUser(authResponse.user);
 
         final domainUser = authResponse.user.toDomain();
@@ -95,9 +96,22 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, User>> getProfile() async {
     try {
+      // First check if we have a cached token and user
+      final token = await _localDataSource.getToken();
+      if (token != null && token.isNotEmpty) {
+        final cachedUser = await _localDataSource.getLastUser();
+        if (cachedUser != null) {
+          print('[AuthRepository] Returning cached user: ${cachedUser.userType}');
+          return Right(cachedUser.toDomain());
+        }
+      }
+      
+      // If no cached data, try to get from remote
       final response = await _remoteDataSource.getProfile();
 
       if (response.isSuccess && response.data != null) {
+        // Cache the user data
+        await _localDataSource.cacheUser(response.data!);
         return Right(response.data!.toDomain());
       } else {
         return Left(ServerFailure(message: response.message));
