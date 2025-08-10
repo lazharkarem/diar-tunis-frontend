@@ -34,21 +34,14 @@ class _GuestHomePageState extends State<GuestHomePage>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _fadeController.forward();
     _slideController.forward();
@@ -73,10 +66,7 @@ class _GuestHomePageState extends State<GuestHomePage>
           position: _slideAnimation,
           child: CustomScrollView(
             controller: _scrollController,
-            slivers: [
-              _buildAppBar(),
-              _buildContent(),
-            ],
+            slivers: [_buildAppBar(), _buildContent()],
           ),
         ),
       ),
@@ -110,9 +100,7 @@ class _GuestHomePageState extends State<GuestHomePage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  Expanded(
-                    child: _buildHeaderSection(),
-                  ),
+                  Expanded(child: _buildHeaderSection()),
                   const SizedBox(height: 16),
                   const SearchBarWidget(),
                 ],
@@ -235,9 +223,7 @@ class _GuestHomePageState extends State<GuestHomePage>
             children: [
               Text(
                 'Property Types',
-                style: AppTextStyles.h4.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppTextStyles.h4.copyWith(fontWeight: FontWeight.bold),
               ),
               TextButton(
                 onPressed: () {
@@ -270,9 +256,7 @@ class _GuestHomePageState extends State<GuestHomePage>
             children: [
               Text(
                 'Featured Properties',
-                style: AppTextStyles.h4.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppTextStyles.h4.copyWith(fontWeight: FontWeight.bold),
               ),
               TextButton(
                 onPressed: () {
@@ -302,9 +286,7 @@ class _GuestHomePageState extends State<GuestHomePage>
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             'Popular Destinations',
-            style: AppTextStyles.h4.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppTextStyles.h4.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
         const SizedBox(height: 16),
@@ -319,10 +301,7 @@ class _GuestHomePageState extends State<GuestHomePage>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            AppColors.secondary,
-            AppColors.secondaryLight,
-          ],
+          colors: [AppColors.secondary, AppColors.secondaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -346,11 +325,11 @@ class _GuestHomePageState extends State<GuestHomePage>
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                                 child: const Icon(
-                   Icons.celebration_outlined,
-                   color: Colors.white,
-                   size: 24,
-                 ),
+                child: const Icon(
+                  Icons.celebration_outlined,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -381,7 +360,10 @@ class _GuestHomePageState extends State<GuestHomePage>
             children: [
               _buildExperienceItem('Traditional Hammam', Icons.spa_outlined),
               const SizedBox(width: 16),
-              _buildExperienceItem('Cooking Classes', Icons.restaurant_outlined),
+              _buildExperienceItem(
+                'Cooking Classes',
+                Icons.restaurant_outlined,
+              ),
               const SizedBox(width: 16),
               _buildExperienceItem('Desert Tours', Icons.explore_outlined),
             ],
