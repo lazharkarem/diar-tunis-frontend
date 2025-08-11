@@ -12,12 +12,13 @@ class AppRoutes {
   static const String settings = '/settings';
 
   // Guest routes
-  static const String guestHome = '/guest';
+  static const String guestHome = '/guest/home';
   static const String propertyDetails = '/property/:id';
   static const String booking = '/booking';
   static const String bookingHistory = '/booking-history';
-  static const String search = '/search';
-  static const String favorites = '/favorites';
+  static const String search = '/guest/search';
+  static const String favorites = '/guest/favorites';
+  static const String bookings = '/guest/bookings';
 
   // Host routes
   static const String hostHome = '/host';

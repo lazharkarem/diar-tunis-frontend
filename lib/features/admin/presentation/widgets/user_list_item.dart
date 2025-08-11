@@ -32,17 +32,18 @@ class UserListItem extends StatelessWidget {
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        minLeadingWidth: 40,
         leading: Container(
-          width: 50,
-          height: 50,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             color: _getUserTypeColor(user['userType']),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Center(
             child: Text(
-              user['name'][0].toUpperCase(),
+              user['name'].isNotEmpty ? user['name'][0].toUpperCase() : '?',
               style: AppTextStyles.h5.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -51,6 +52,7 @@ class UserListItem extends StatelessWidget {
           ),
         ),
         title: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: Column(
@@ -62,6 +64,7 @@ class UserListItem extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: AppColors.charcoal,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -69,6 +72,7 @@ class UserListItem extends StatelessWidget {
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -87,11 +91,7 @@ class UserListItem extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.verified,
-                      size: 12,
-                      color: AppColors.success,
-                    ),
+                    Icon(Icons.verified, size: 12, color: AppColors.success),
                     const SizedBox(width: 4),
                     Text(
                       'Verified',
@@ -107,15 +107,22 @@ class UserListItem extends StatelessWidget {
         ),
         subtitle: Container(
           margin: const EdgeInsets.only(top: 8),
-          child: Row(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getUserTypeColor(user['userType']).withValues(alpha: 0.1),
+                  color: _getUserTypeColor(
+                    user['userType'],
+                  ).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: _getUserTypeColor(user['userType']).withValues(alpha: 0.2),
+                    color: _getUserTypeColor(
+                      user['userType'],
+                    ).withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -127,62 +134,80 @@ class UserListItem extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.calendar_today,
-                size: 12,
-                color: AppColors.textLight,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Joined ${_formatDate(user['joinDate'])}',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textLight,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.calendar_today,
+                    size: 12,
+                    color: AppColors.textLight,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Joined ${_formatDate(user['joinDate'])}',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'view':
-                onTap();
-                break;
-              case 'edit':
-                onEdit();
-                break;
-              case 'delete':
-                onDelete();
-                break;
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'view',
-              child: ListTile(
-                leading: Icon(Icons.visibility),
-                title: Text('View Details'),
-                contentPadding: EdgeInsets.zero,
+        trailing: SizedBox(
+          width: 40,
+          child: PopupMenuButton<String>(
+            padding: EdgeInsets.zero,
+            icon: const Icon(Icons.more_vert, size: 20),
+            onSelected: (value) {
+              switch (value) {
+                case 'view':
+                  onTap();
+                  break;
+                case 'edit':
+                  onEdit();
+                  break;
+                case 'delete':
+                  onDelete();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'view',
+                height: 40,
+                child: Row(
+                  children: [
+                    Icon(Icons.visibility, size: 18),
+                    SizedBox(width: 8),
+                    Text('View'),
+                  ],
+                ),
               ),
-            ),
-            const PopupMenuItem(
-              value: 'edit',
-              child: ListTile(
-                leading: Icon(Icons.edit),
-                title: Text('Edit'),
-                contentPadding: EdgeInsets.zero,
+              const PopupMenuItem(
+                value: 'edit',
+                height: 40,
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 18),
+                    SizedBox(width: 8),
+                    Text('Edit'),
+                  ],
+                ),
               ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: ListTile(
-                leading: Icon(Icons.delete, color: AppColors.error),
-                title: Text('Delete', style: TextStyle(color: AppColors.error)),
-                contentPadding: EdgeInsets.zero,
+              PopupMenuItem(
+                value: 'delete',
+                height: 40,
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, size: 18, color: AppColors.error),
+                    const SizedBox(width: 8),
+                    Text('Delete', style: TextStyle(color: AppColors.error)),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         onTap: onTap,
       ),

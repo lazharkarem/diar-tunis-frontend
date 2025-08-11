@@ -1,10 +1,12 @@
+import 'package:diar_tunis/app/routes/app_routes.dart';
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_bloc.dart';
-import 'package:diar_tunis/features/authentication/presentation/bloc/auth_event.dart';
 import 'package:diar_tunis/features/authentication/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class GuestNavigationWrapper extends StatelessWidget {
   final Widget child;
@@ -25,7 +27,7 @@ class GuestNavigationWrapper extends StatelessWidget {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthUnauthenticated) {
-          Navigator.of(context).pushReplacementNamed('/login');
+          context.go('/login');
         }
       },
       child: PopScope(
@@ -80,6 +82,7 @@ class GuestNavigationWrapper extends StatelessWidget {
       backgroundColor: Colors.white,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
       actions: [
         IconButton(
           onPressed: () {
@@ -100,9 +103,10 @@ class GuestNavigationWrapper extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         IconButton(
-          onPressed: () {
+        
             // Navigate to profile
-          },
+             onPressed: () => context.go(AppRoutes.profile),
+          
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -200,7 +204,9 @@ class GuestNavigationWrapper extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+          color: isActive
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -242,19 +248,19 @@ class GuestNavigationWrapper extends StatelessWidget {
 
     switch (index) {
       case 0:
-        Navigator.of(context).pushReplacementNamed('/guest/home');
+        context.go(AppRoutes.guestHome);
         break;
       case 1:
-        Navigator.of(context).pushReplacementNamed('/guest/search');
+        context.go(AppRoutes.search);
         break;
       case 2:
-        Navigator.of(context).pushReplacementNamed('/guest/favorites');
+        context.go(AppRoutes.favorites);
         break;
       case 3:
-        Navigator.of(context).pushReplacementNamed('/guest/bookings');
+        context.go(AppRoutes.bookings);
         break;
       case 4:
-        Navigator.of(context).pushReplacementNamed('/guest/profile');
+        context.go(AppRoutes.profile);
         break;
     }
   }

@@ -6,6 +6,7 @@ import 'package:diar_tunis/features/guest/presentation/widgets/guest_navigation_
 import 'package:diar_tunis/features/guest/presentation/widgets/popular_destinations.dart';
 import 'package:diar_tunis/features/guest/presentation/widgets/search_bar_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class GuestHomePage extends StatefulWidget {
   const GuestHomePage({super.key});
@@ -80,6 +81,7 @@ class _GuestHomePageState extends State<GuestHomePage>
       pinned: true,
       backgroundColor: Colors.transparent,
       elevation: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
@@ -93,18 +95,16 @@ class _GuestHomePageState extends State<GuestHomePage>
               ],
             ),
           ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  Expanded(child: _buildHeaderSection()),
-                  const SizedBox(height: 16),
-                  const SearchBarWidget(),
-                ],
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                Expanded(child: _buildHeaderSection()),
+                const SizedBox(height: 16),
+                const SearchBarWidget(),
+              ],
             ),
           ),
         ),

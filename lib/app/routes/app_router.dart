@@ -9,8 +9,12 @@ import 'package:diar_tunis/features/authentication/presentation/pages/register_p
 import 'package:diar_tunis/features/authentication/presentation/pages/splash_page.dart';
 import 'package:diar_tunis/features/guest/presentation/pages/booking_history_page.dart';
 import 'package:diar_tunis/features/guest/presentation/pages/booking_page.dart';
+import 'package:diar_tunis/features/guest/presentation/pages/guest_bookings_page.dart';
+import 'package:diar_tunis/features/guest/presentation/pages/guest_favorites_page.dart';
 import 'package:diar_tunis/features/guest/presentation/pages/guest_home_page.dart';
+import 'package:diar_tunis/features/guest/presentation/pages/guest_profile_page.dart';
 import 'package:diar_tunis/features/guest/presentation/pages/property_details_page.dart';
+import 'package:diar_tunis/features/guest/presentation/pages/guest_search_page.dart';
 import 'package:diar_tunis/features/host/presentation/pages/bookings_list_page.dart';
 import 'package:diar_tunis/features/host/presentation/pages/earnings_page.dart';
 import 'package:diar_tunis/features/host/presentation/pages/host_dashboard_page.dart';
@@ -34,10 +38,7 @@ class AppRouter {
             const SplashPage(),
       ),
       // Fallback route for root path
-      GoRoute(
-        path: '/',
-        redirect: (context, state) => AppRoutes.splash,
-      ),
+      GoRoute(path: '/', redirect: (context, state) => AppRoutes.splash),
       GoRoute(
         path: AppRoutes.onboarding,
         builder: (BuildContext context, GoRouterState state) =>
@@ -136,19 +137,24 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.search,
         builder: (BuildContext context, GoRouterState state) =>
-            const GuestHomePage(), // Replace with SearchPage when available
+            const GuestSearchPage(),
       ),
       GoRoute(
         path: AppRoutes.favorites,
         builder: (BuildContext context, GoRouterState state) =>
-            const GuestHomePage(), // Replace with FavoritesPage when available
+            const GuestFavoritesPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.bookings,
+        builder: (BuildContext context, GoRouterState state) =>
+            const GuestBookingsPage(),
       ),
 
       // Common routes
       GoRoute(
         path: AppRoutes.profile,
         builder: (BuildContext context, GoRouterState state) =>
-            const GuestHomePage(), // Replace with ProfilePage when available
+            const GuestProfilePage(),
       ),
       GoRoute(
         path: AppRoutes.settings,
