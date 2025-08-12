@@ -3,7 +3,8 @@ import 'package:diar_tunis/features/properties/domain/entities/category.dart';
 import 'package:diar_tunis/features/shared/data/models/destination_model.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/network/api_service.dart';
+import '../../../../core/network/api_service.dart' hide PaginatedResponse;
+import '../../../../core/network/paginated_response.dart';
 
 abstract class PropertyRemoteDataSource {
   Future<ApiResponse<PaginatedResponse<PropertyModel>>> getProperties({
@@ -42,48 +43,110 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
     double? maxPrice,
     int? guests,
   }) async {
-    final queryParameters = <String, dynamic>{
-      'page': page,
-      'per_page': perPage,
-    };
-
-    if (search != null && search.isNotEmpty) queryParameters['search'] = search;
-    if (city != null && city.isNotEmpty) queryParameters['city'] = city;
-    if (type != null && type.isNotEmpty) queryParameters['type'] = type;
-    if (minPrice != null) queryParameters['min_price'] = minPrice;
-    if (maxPrice != null) queryParameters['max_price'] = maxPrice;
-    if (guests != null) queryParameters['guests'] = guests;
-
-    final response = await _apiService.get<Map<String, dynamic>>(
-      '/search-properties',
-      queryParameters: queryParameters,
-    );
-
-    if (response.isSuccess && response.data != null) {
-      final paginatedResponse = PaginatedResponse.fromJson(
-        response.data!,
-        (json) => PropertyModel.fromJson(json),
+    try {
+      final response = await _apiService.get<Map<String, dynamic>>(
+        '/host/properties',
+        queryParameters: <String, dynamic>{
+          'page': page,
+          'per_page': perPage,
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (city != null && city.isNotEmpty) 'city': city,
+          if (type != null && type.isNotEmpty) 'type': type,
+          if (minPrice != null) 'min_price': minPrice,
+          if (maxPrice != null) 'max_price': maxPrice,
+          if (guests != null) 'guests': guests,
+        },
       );
 
-      return ApiResponse<PaginatedResponse<PropertyModel>>(
-        success: true,
-        data: paginatedResponse,
-        message: response.message,
-      );
-    } else {
+      if (!response.isSuccess) {
+        return ApiResponse<PaginatedResponse<PropertyModel>>(
+          success: false,
+          message: response.message ?? 'Failed to fetch properties',
+        );
+      }
+
+      // Log the raw response for debugging
+      final responseData = response.data;
+      print('Raw properties response: $responseData');
+      
+      // Handle null response data
+      if (responseData == null) {
+        return ApiResponse<PaginatedResponse<PropertyModel>>(
+          success: false,
+          message: 'No data received from server',
+        );
+      }
+      
+      // Check if the response has a 'data' field
+      if (responseData['data'] == null) {
+        return ApiResponse<PaginatedResponse<PropertyModel>>(
+          success: false,
+          message: 'Invalid response format: missing data field',
+        );
+      }
+
+      // Handle the case where the response might be a list
+      if (responseData['data'] is List) {
+        try {
+          // Add detailed logging for debugging
+          print('Parsing properties data...');
+          
+          // Parse each item individually to catch any parsing errors
+          final items = (responseData['data'] as List).map<PropertyModel>((item) {
+            try {
+              print('Parsing property item: $item');
+              return PropertyModel.fromJson(item as Map<String, dynamic>);
+            } catch (e, stackTrace) {
+              print('Error parsing property item: $e');
+              print('Item data: $item');
+              print('Stack trace: $stackTrace');
+              rethrow;
+            }
+          }).toList();
+          
+          // Create the paginated response with the parsed items
+          final paginatedResponse = PaginatedResponse<PropertyModel>(
+            data: items,
+            currentPage: responseData['current_page'] as int? ?? 1,
+            perPage: responseData['per_page'] as int? ?? 15,
+            total: responseData['total'] as int? ?? 0,
+            lastPage: responseData['last_page'] as int? ?? 1,
+          );
+
+          return ApiResponse<PaginatedResponse<PropertyModel>>(
+            success: true,
+            data: paginatedResponse,
+            message: response.message ?? 'Properties retrieved successfully',
+          );
+        } catch (e, stackTrace) {
+          print('Error creating paginated response: $e');
+          print('Stack trace: $stackTrace');
+          return ApiResponse<PaginatedResponse<PropertyModel>>(
+            success: false,
+            message: 'Failed to parse properties data: $e',
+          );
+        }
+      } else {
+        return ApiResponse<PaginatedResponse<PropertyModel>>(
+          success: false,
+          message: 'Invalid response format: expected list of properties',
+        );
+      }
+    } catch (e, stackTrace) {
+      print('Error in getProperties: $e');
+      print('Stack trace: $stackTrace');
       return ApiResponse<PaginatedResponse<PropertyModel>>(
         success: false,
-        message: response.message,
-        errors: response.errors,
+        message: 'Error fetching properties: ${e.toString()}',
       );
     }
   }
 
   @override
-  Future<ApiResponse<PropertyModel>> getProperty(int id) async {
-    return await _apiService.get<PropertyModel>(
+  Future<ApiResponse<PropertyModel>> getProperty(int id) {
+    return _apiService.get<PropertyModel>(
       '/properties/$id',
-      fromJson: (json) => PropertyModel.fromJson(json),
+      fromJson: (dynamic json) => PropertyModel.fromJson(json as Map<String, dynamic>),
     );
   }
 

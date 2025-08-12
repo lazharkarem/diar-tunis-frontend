@@ -1,9 +1,12 @@
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
+import 'package:diar_tunis/features/admin/domain/entities/property.dart';
+import 'package:diar_tunis/features/host/presentation/providers/host_property_provider.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/host_navigation_wrapper.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/host_stats_card.dart';
-import 'package:diar_tunis/features/host/presentation/widgets/recent_bookings_widget.dart';
+import 'package:diar_tunis/features/host/presentation/widgets/property_card.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HostDashboardPage extends StatefulWidget {
   const HostDashboardPage({super.key});
@@ -49,6 +52,11 @@ class _HostDashboardPageState extends State<HostDashboardPage>
 
     _fadeController.forward();
     _slideController.forward();
+    
+    // Load properties when the widget initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<HostPropertyProvider>().loadProperties();
+    });
   }
 
   @override
@@ -90,6 +98,8 @@ class _HostDashboardPageState extends State<HostDashboardPage>
   }
 
   Widget _buildWelcomeSection() {
+    final propertyProvider = context.watch<HostPropertyProvider>();
+    
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -155,7 +165,10 @@ class _HostDashboardPageState extends State<HostDashboardPage>
           const SizedBox(height: 20),
           Row(
             children: [
-              _buildWelcomeStat('3', 'Properties'),
+              _buildWelcomeStat(
+                '${propertyProvider.totalProperties}', 
+                'Properties',
+              ),
               const SizedBox(width: 24),
               _buildWelcomeStat('4.8★', 'Rating'),
               const SizedBox(width: 24),
@@ -378,34 +391,78 @@ class _HostDashboardPageState extends State<HostDashboardPage>
     );
   }
 
+  void _navigateToPropertyDetails(Property property) {
+    // TODO: Implement navigation to property details
+    debugPrint('Navigate to property details: ${property.id}');
+  }
+
+  void _editProperty(Property property) {
+    // TODO: Implement property editing
+    debugPrint('Edit property: ${property.id}');
+  }
+
+  void _togglePropertyStatus(Property property) {
+    // TODO: Implement status toggling
+    debugPrint('Toggle status for property: ${property.id}');
+  }
+
+  void _viewPropertyBookings(Property property) {
+    // TODO: Implement viewing bookings for property
+    debugPrint('View bookings for property: ${property.id}');
+  }
+
   Widget _buildRecentBookingsSection() {
+    final propertyProvider = context.watch<HostPropertyProvider>();
+    
+    if (propertyProvider.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    
+    if (propertyProvider.error != null) {
+      return Center(
+        child: Text(
+          propertyProvider.error!,
+          style: AppTextStyles.bodyMedium.copyWith(color: Colors.red),
+        ),
+      );
+    }
+    
+    if (propertyProvider.properties.isEmpty) {
+      return const Center(
+        child: Text('No properties found'),
+      );
+    }
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Recent Bookings',
-              style: AppTextStyles.h4.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                // Navigate to all bookings
-              },
-              child: Text(
-                'View All',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ],
+        Text(
+          'Your Properties',
+          style: AppTextStyles.h4.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 16),
-        const RecentBookingsWidget(),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: propertyProvider.properties.length,
+          itemBuilder: (context, index) {
+            final property = propertyProvider.properties[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: PropertyCard(
+                property: property,
+                onTap: () => _navigateToPropertyDetails(property),
+                onEdit: () => _editProperty(property),
+                onToggleStatus: () => _togglePropertyStatus(property),
+                onViewBookings: () => _viewPropertyBookings(property),
+              ),
+            );
+          },
+        ),
       ],
     );
   }

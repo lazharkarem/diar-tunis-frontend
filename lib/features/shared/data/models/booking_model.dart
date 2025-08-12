@@ -34,9 +34,9 @@ class BookingModel extends Equatable {
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
-      id: json['id'],
-      userId: json['user_id'],
-      propertyId: json['property_id'],
+      id: _intFromJson(json['id']),
+      userId: _intFromJson(json['user_id']),
+      propertyId: _intFromJson(json['property_id']),
       checkIn: DateTime.parse(json['check_in']),
       checkOut: DateTime.parse(json['check_out']),
       guests: json['guests'],
@@ -81,6 +81,13 @@ class BookingModel extends Equatable {
       status: status,
       createdAt: createdAt,
     );
+  }
+
+  static int _intFromJson(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
   }
 
   int get nights => checkOut.difference(checkIn).inDays;

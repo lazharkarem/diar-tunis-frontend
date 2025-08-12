@@ -18,10 +18,13 @@ import 'package:diar_tunis/features/guest/presentation/pages/guest_search_page.d
 import 'package:diar_tunis/features/host/presentation/pages/bookings_list_page.dart';
 import 'package:diar_tunis/features/host/presentation/pages/earnings_page.dart';
 import 'package:diar_tunis/features/host/presentation/pages/host_dashboard_page.dart';
-import 'package:diar_tunis/features/host/presentation/pages/my_properties_page.dart';
+import 'package:diar_tunis/features/host/presentation/providers/host_property_provider.dart';
 import 'package:diar_tunis/features/shared/presentation/pages/onboarding_page.dart';
+import 'package:diar_tunis/features/properties/domain/repositories/property_repository.dart';
+import 'package:diar_tunis/injection_container.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -78,15 +81,42 @@ class AppRouter {
       ),
 
       // Host routes
+      // Host home route with providers
       GoRoute(
         path: AppRoutes.hostHome,
-        builder: (BuildContext context, GoRouterState state) =>
-            const HostDashboardPage(),
+        builder: (BuildContext context, GoRouterState state) {
+          return MultiProvider(
+            providers: [
+              Provider<PropertyRepository>(
+                create: (context) => di.sl<PropertyRepository>(),
+              ),
+              ChangeNotifierProvider<HostPropertyProvider>(
+                create: (context) => HostPropertyProvider(
+                  di.sl<PropertyRepository>(),
+                )..loadProperties(),
+              ),
+            ],
+            child: const HostDashboardPage(),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.hostProperties,
-        builder: (BuildContext context, GoRouterState state) =>
-            const MyPropertiesPage(),
+        builder: (BuildContext context, GoRouterState state) {
+          return MultiProvider(
+            providers: [
+              Provider<PropertyRepository>(
+                create: (context) => di.sl<PropertyRepository>(),
+              ),
+              ChangeNotifierProvider<HostPropertyProvider>(
+                create: (context) => HostPropertyProvider(
+                  di.sl<PropertyRepository>(),
+                )..loadProperties(),
+              ),
+            ],
+            child: const HostDashboardPage(),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.hostBookings,
@@ -98,17 +128,15 @@ class AppRouter {
         builder: (BuildContext context, GoRouterState state) =>
             const EarningsPage(),
       ),
+      // Add property route - redirect to host home for now
       GoRoute(
         path: AppRoutes.addProperty,
-        builder: (BuildContext context, GoRouterState state) =>
-            const MyPropertiesPage(), // Replace with AddPropertyPage when available
+        redirect: (context, state) => AppRoutes.hostHome,
       ),
+      // Edit property route - redirect to host home for now
       GoRoute(
         path: AppRoutes.editProperty,
-        builder: (BuildContext context, GoRouterState state) {
-          final propertyId = state.pathParameters['id']!;
-          return const MyPropertiesPage(); // Replace with EditPropertyPage when available
-        },
+        redirect: (context, state) => AppRoutes.hostHome,
       ),
 
       // Guest routes

@@ -1,8 +1,11 @@
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
+import 'package:diar_tunis/features/admin/domain/entities/property.dart';
+import 'package:diar_tunis/features/host/presentation/providers/host_property_provider.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/host_navigation_wrapper.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/property_card.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MyPropertiesPage extends StatefulWidget {
   const MyPropertiesPage({super.key});
@@ -16,6 +19,17 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
   String _selectedFilter = 'all';
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<HostPropertyProvider>();
+      if (provider.properties.isEmpty) {
+        provider.loadProperties();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -23,19 +37,53 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return HostNavigationWrapper(
-      title: 'My Properties',
-      currentIndex: 3,
-      floatingActionButton: _buildFloatingActionButton(),
-      child: Column(
-        children: [
-          _buildSearchSection(),
-          _buildFilterSection(),
-          Expanded(
-            child: _buildPropertiesList(),
+    return Consumer<HostPropertyProvider>(
+      builder: (context, provider, child) {
+        return HostNavigationWrapper(
+          title: 'My Properties',
+          currentIndex: 3,
+          floatingActionButton: _buildFloatingActionButton(),
+          child: Column(
+            children: [
+              _buildSearchSection(),
+              _buildFilterSection(),
+              if (provider.isLoading) 
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (provider.error != null)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Error loading properties',
+                          style: AppTextStyles.bodyLarge.copyWith(color: AppColors.error),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: provider.loadProperties,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else if (provider.properties.isEmpty)
+                const Expanded(
+                  child: Center(
+                    child: Text('No properties found'),
+                  ),
+                )
+              else
+                Expanded(
+                  child: _buildPropertiesList(provider.properties),
+                ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -160,30 +208,36 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
     );
   }
 
-  Widget _buildPropertiesList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: 5, // Replace with actual data
-      itemBuilder: (context, index) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: PropertyCard(
-            property: _getDummyProperty(index),
-            onTap: () {
-              _showPropertyDetails(context, index);
-            },
-            onEdit: () {
-              _editProperty(index);
-            },
-            onToggleStatus: () {
-              _togglePropertyStatus(index);
-            },
-            onViewBookings: () {
-              _viewPropertyBookings(index);
-            },
-          ),
-        );
+  Widget _buildPropertiesList(List<Property> properties) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        await context.read<HostPropertyProvider>().loadProperties();
       },
+      child: ListView.builder(
+        padding: const EdgeInsets.all(20),
+        itemCount: properties.length,
+        itemBuilder: (context, index) {
+          final property = properties[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            child: PropertyCard(
+              property: property,
+              onTap: () {
+                _showPropertyDetails(context, property);
+              },
+              onEdit: () {
+                _editProperty(property);
+              },
+              onToggleStatus: () {
+                _togglePropertyStatus(property);
+              },
+              onViewBookings: () {
+                _viewPropertyBookings(property);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -222,86 +276,77 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
     );
   }
 
-  Map<String, dynamic> _getDummyProperty(int index) {
-    final statuses = ['active', 'pending', 'inactive'];
-    return {
-      'id': 'property_$index',
-      'title': 'Beautiful Property ${index + 1}',
-      'location': 'Tunis, Tunisia',
-      'price': '\$${(index + 1) * 50}',
-      'status': statuses[index % 3],
-      'images': ['https://example.com/image1.jpg'],
-      'rating': 4.0 + (index % 10) / 10,
-      'reviewCount': (index + 1) * 5,
-      'bookingCount': (index + 1) * 3,
-      'earnings': '\$${(index + 1) * 500}',
-    };
+  void _showPropertyDetails(BuildContext context, Property property) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildPropertyDetailsSheet(property),
+    );
   }
 
-  void _showPropertyDetails(BuildContext context, int index) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+  void _editProperty(Property property) {
+    // TODO: Implement edit property navigation
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Edit property: ${property.title}')),
+    );
+  }
+
+  void _togglePropertyStatus(Property property) async {
+    // TODO: Implement toggle property status
+    final provider = context.read<HostPropertyProvider>();
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Updating property status...')),
+      );
+      
+      // TODO: Call API to update property status
+      // await provider.togglePropertyStatus(property.id);
+      
+      // Refresh the list
+      await provider.loadProperties();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Property status updated')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating property: $e')),
+      );
+    }
+  }
+
+  void _viewPropertyBookings(Property property) {
+    // TODO: Implement view bookings navigation
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('View bookings for: ${property.title}')),
+    );
+  }
+
+  Widget _buildPropertyDetailsSheet(Property property) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
         ),
-        title: Text(
-          'Property ${index + 1} Details',
-          style: AppTextStyles.h4.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: const Text('Property details would go here'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            margin: const EdgeInsets.all(16),
             child: Text(
-              'Close',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.primary,
+              property.title,
+              style: AppTextStyles.h4.copyWith(
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
+          // TODO: Add property details
         ],
-      ),
-    );
-  }
-
-  void _editProperty(int index) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Edit property ${index + 1}'),
-        backgroundColor: AppColors.info,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
-  }
-
-  void _togglePropertyStatus(int index) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Property ${index + 1} status updated'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
-  }
-
-  void _viewPropertyBookings(int index) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('View bookings for property ${index + 1}'),
-        backgroundColor: AppColors.secondary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
       ),
     );
   }

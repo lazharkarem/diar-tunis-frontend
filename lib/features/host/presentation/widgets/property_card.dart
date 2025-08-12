@@ -1,10 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:diar_tunis/app/themes/colors.dart';
 import 'package:diar_tunis/app/themes/text_styles.dart';
+import 'package:diar_tunis/features/admin/domain/entities/property.dart';
 import 'package:flutter/material.dart';
 
 class PropertyCard extends StatelessWidget {
-  final Map<String, dynamic> property;
+  final Property property;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onToggleStatus;
@@ -18,6 +19,40 @@ class PropertyCard extends StatelessWidget {
     required this.onToggleStatus,
     required this.onViewBookings,
   });
+
+  // Helper method to build info row with icon
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppColors.textSecondary),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+        ),
+      ],
+    );
+  }
+
+  // Get color based on property status
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return AppColors.success;
+      case 'inactive':
+        return AppColors.error;
+      case 'pending':
+        return AppColors.warning;
+      case 'available':
+        return Colors.green;
+      case 'booked':
+        return Colors.orange;
+      case 'maintenance':
+        return Colors.blue;
+      default:
+        return AppColors.textSecondary;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,26 +71,39 @@ class PropertyCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: property['images'][0],
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      height: 200,
-                      color: AppColors.surfaceVariant,
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      height: 200,
-                      color: AppColors.surfaceVariant,
-                      child: const Icon(
-                        Icons.image_not_supported,
-                        size: 50,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
+                  // Property image with placeholder
+                  property.images.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: property.images.first.imageUrl.startsWith('http')
+                              ? property.images.first.imageUrl
+                              : 'http://localhost:8000${property.images.first.imageUrl}',
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            height: 200,
+                            color: AppColors.surfaceVariant,
+                            child: const Center(child: CircularProgressIndicator()),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            height: 200,
+                            color: AppColors.surfaceVariant,
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              size: 50,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          height: 200,
+                          color: AppColors.surfaceVariant,
+                          child: const Icon(
+                            Icons.home,
+                            size: 50,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
 
                   // Status badge
                   Positioned(
@@ -67,13 +115,11 @@ class PropertyCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(
-                          property['status'],
-                        ).withValues(alpha: 0.9),
+                        color: _getStatusColor(property.status).withOpacity(0.9),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        property['status'].toString().toUpperCase(),
+                        property.status.toUpperCase(),
                         style: AppTextStyles.labelSmall.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -85,61 +131,44 @@ class PropertyCard extends StatelessWidget {
               ),
             ),
 
+            // Property details
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Title
                   Text(
-                    property['title'],
+                    property.title,
                     style: AppTextStyles.h5,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          property['location'],
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
+                  
+                  // Location
+                  if (property.address.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    _buildInfoRow(
+                      Icons.location_on,
+                      property.address,
+                    ),
+                  ],
+                  
+                  // Price and details
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${property['price']} / night',
+                        '\$${property.pricePerNight.toStringAsFixed(2)} / night',
                         style: AppTextStyles.h6.copyWith(
                           color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.star,
-                            color: AppColors.warning,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${property['rating']} (${property['reviewCount']} reviews)',
-                            style: AppTextStyles.bodySmall,
-                          ),
-                        ],
+                      _buildInfoRow(
+                        Icons.hotel,
+                        '${property.bedrooms} Beds • ${property.bathrooms} Baths',
                       ),
                     ],
                   ),
@@ -167,16 +196,5 @@ class PropertyCard extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'active':
-        return AppColors.success;
-      case 'pending':
-        return AppColors.warning;
-      case 'inactive':
-        return AppColors.error;
-      default:
-        return AppColors.textSecondary;
-    }
-  }
+
 }

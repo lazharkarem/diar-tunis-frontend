@@ -28,7 +28,7 @@ class UserModel extends Equatable {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'],
+      id: _intFromJson(json['id']),
       name: json['name'],
       email: json['email'],
       userType: json['user_type']?.toString().toLowerCase().trim() ?? 'guest',
@@ -80,6 +80,13 @@ class UserModel extends Equatable {
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
+  }
+
+  static int _intFromJson(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
   }
 
   bool get isGuest => userType == 'guest';

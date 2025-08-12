@@ -16,12 +16,16 @@ class PropertyImageModel extends PropertyImage {
   Map<String, dynamic> toJson() => _$PropertyImageModelToJson(this);
 
   // Convert data model to domain entity
-  PropertyImage toDomain() {
+  PropertyImage toEntity() {
     return PropertyImage(
       imageUrl: imageUrl,
       isPrimary: isPrimary,
     );
   }
+  
+  // Alias for backward compatibility
+  @Deprecated('Use toEntity instead')
+  PropertyImage toDomain() => toEntity();
 
   factory PropertyImageModel.fromEntity(PropertyImage image) {
     return PropertyImageModel(
