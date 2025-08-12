@@ -18,6 +18,7 @@ import 'package:diar_tunis/features/guest/presentation/pages/guest_search_page.d
 import 'package:diar_tunis/features/host/presentation/pages/bookings_list_page.dart';
 import 'package:diar_tunis/features/host/presentation/pages/earnings_page.dart';
 import 'package:diar_tunis/features/host/presentation/pages/host_dashboard_page.dart';
+import 'package:diar_tunis/features/host/presentation/pages/my_properties_page.dart';
 import 'package:diar_tunis/features/host/presentation/providers/host_property_provider.dart';
 import 'package:diar_tunis/features/shared/presentation/pages/onboarding_page.dart';
 import 'package:diar_tunis/features/properties/domain/repositories/property_repository.dart';
@@ -114,7 +115,7 @@ class AppRouter {
                 )..loadProperties(),
               ),
             ],
-            child: const HostDashboardPage(),
+            child: const MyPropertiesPage(),
           );
         },
       ),
