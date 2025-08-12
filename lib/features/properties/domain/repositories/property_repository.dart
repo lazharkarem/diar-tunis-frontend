@@ -23,6 +23,11 @@ abstract class PropertyRepository {
 
   Future<ApiResponse<List<PropertyCategory>>> getPropertyCategories();
 
+  Future<ApiResponse<PaginatedResponse<Property>>> getHostProperties({
+    int page = 1,
+    int perPage = 10,
+  });
+
   Future<ApiResponse<PaginatedResponse<Property>>> searchProperties({
     required String query,
     int page,

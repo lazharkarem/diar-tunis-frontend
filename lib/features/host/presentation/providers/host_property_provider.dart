@@ -23,35 +23,51 @@ class HostPropertyProvider with ChangeNotifier {
   HostPropertyProvider(this._propertyRepository);
   
   Future<void> loadProperties({bool refresh = false}) async {
+    print('loadProperties called. refresh: $refresh');
+    
     if (refresh) {
       _currentPage = 1;
       _properties = [];
+      _error = null;
     }
     
-    if (_isLoading || _isLoadingMore) return;
+    // Prevent multiple simultaneous loads
+    if (_isLoading || _isLoadingMore) {
+      print('Load already in progress. Skipping...');
+      return;
+    }
     
+    // Set loading states
     if (_currentPage == 1) {
       _isLoading = true;
     } else {
       _isLoadingMore = true;
     }
     
-    _error = null;
     notifyListeners();
     
     try {
+      print('Fetching properties page $_currentPage...');
+      final stopwatch = Stopwatch()..start();
+      
       final response = await _propertyRepository.getProperties(
         page: _currentPage,
         perPage: 10, // Adjust per page count as needed
       );
       
+      stopwatch.stop();
+      print('API call completed in ${stopwatch.elapsedMilliseconds}ms');
+      
       if (response.isSuccess) {
         final data = response.data;
         if (data == null) {
           _error = 'No data received from server';
+          print('Error: $_error');
           notifyListeners();
           return;
         }
+        
+        print('Received ${data.data.length} properties (page ${data.currentPage} of ${data.lastPage})');
         
         final newProperties = data.data;
         
@@ -62,20 +78,34 @@ class HostPropertyProvider with ChangeNotifier {
         }
         
         _totalProperties = data.total;
-        _totalPages = (data.total / 10).ceil(); // Match with perPage
+        _totalPages = data.lastPage;
         
         if (newProperties.isNotEmpty) {
           _currentPage++;
         }
+        
+        print('Total properties loaded: ${_properties.length}');
       } else {
         _error = response.message ?? 'Failed to load properties';
+        print('API Error: $_error');
+        print('Status code: ${response.statusCode}');
+        
+        // Handle authentication errors
+        if (response.statusCode != null && response.statusCode == 401) {
+          _error = 'Your session has expired. Please log in again.';
+          // TODO: Trigger logout flow
+        }
       }
-    } catch (e) {
-      _error = 'Error loading properties: $e';
+    } catch (e, stackTrace) {
+      _error = 'Error loading properties: ${e.toString()}';
+      print('Exception in loadProperties: $_error');
+      print('Stack trace: $stackTrace');
     } finally {
       _isLoading = false;
       _isLoadingMore = false;
       notifyListeners();
+      
+      print('Load completed. Error: $_error');
     }
   }
   

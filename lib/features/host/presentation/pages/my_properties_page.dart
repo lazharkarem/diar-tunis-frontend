@@ -1,11 +1,12 @@
-import 'package:diar_tunis/app/themes/colors.dart';
-import 'package:diar_tunis/app/themes/text_styles.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:diar_tunis/app/themes/colors.dart' as app_colors;
+import 'package:diar_tunis/app/themes/text_styles.dart' as app_styles;
 import 'package:diar_tunis/features/admin/domain/entities/property.dart';
 import 'package:diar_tunis/features/host/presentation/providers/host_property_provider.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/host_navigation_wrapper.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/property_card.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class MyPropertiesPage extends StatefulWidget {
   const MyPropertiesPage({super.key});
@@ -91,11 +92,11 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
     return Container(
       margin: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: app_colors.AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: app_colors.AppColors.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -103,21 +104,24 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
       ),
       child: TextField(
         controller: _searchController,
+        style: app_styles.AppTextStyles.bodyLarge.copyWith(
+          color: app_colors.AppColors.textSecondary,
+        ),
         decoration: InputDecoration(
           hintText: 'Search your properties...',
-          hintStyle: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textLight,
+          hintStyle: app_styles.AppTextStyles.bodyLarge.copyWith(
+            color: app_colors.AppColors.textSecondary.withOpacity(0.7),
           ),
           prefixIcon: Container(
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: app_colors.AppColors.primary.withAlpha(25),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
               Icons.search_outlined,
-              color: AppColors.primary,
+              color: app_colors.AppColors.background,
               size: 20,
             ),
           ),
@@ -164,16 +168,16 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary : AppColors.surface,
+              color: isSelected ? app_colors.AppColors.primary : app_colors.AppColors.background,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.border,
+                color: isSelected ? app_colors.AppColors.primary : app_colors.AppColors.divider,
                 width: 1,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.2),
+                        color: app_colors.AppColors.primary.withAlpha(50),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -186,14 +190,14 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
                 Icon(
                   icon,
                   size: 14,
-                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                  color: isSelected ? Colors.white : app_colors.AppColors.textSecondary,
                 ),
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
                     label,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                    style: app_styles.AppTextStyles.labelSmall.copyWith(
+                      color: isSelected ? Colors.white : app_colors.AppColors.textSecondary,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -245,14 +249,14 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryLight],
+          colors: [app_colors.AppColors.primary, app_colors.AppColors.primaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.4),
+            color: app_colors.AppColors.primary.withAlpha(100),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -267,7 +271,7 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(
           'Add Property',
-          style: AppTextStyles.labelMedium.copyWith(
+          style: app_styles.AppTextStyles.labelMedium.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
@@ -327,7 +331,7 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
   Widget _buildPropertyDetailsSheet(Property property) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: app_colors.AppColors.surface,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(16),
           topRight: Radius.circular(16),
@@ -339,8 +343,8 @@ class _MyPropertiesPageState extends State<MyPropertiesPage> {
           Container(
             margin: const EdgeInsets.all(16),
             child: Text(
-              property.title,
-              style: AppTextStyles.h4.copyWith(
+              'My Properties',
+              style: app_styles.AppTextStyles.h4.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),

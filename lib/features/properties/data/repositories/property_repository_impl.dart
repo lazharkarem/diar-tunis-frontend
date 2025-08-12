@@ -186,6 +186,45 @@ class PropertyRepositoryImpl implements PropertyRepository {
     }
   }
 
+  Future<ApiResponse<PaginatedResponse<Property>>> getHostProperties({
+    int page = 1,
+    int perPage = 10,
+  }) async {
+    try {
+      final response = await _remoteDataSource.getProperties(
+        page: page,
+        perPage: perPage,
+      );
+
+      if (response.isSuccess && response.data != null) {
+        final paginatedResponse = PaginatedResponse<Property>(
+          data: response.data!.data.map((model) => model.toDomain()).toList(),
+          currentPage: response.data!.currentPage,
+          lastPage: response.data!.lastPage,
+          total: response.data!.total,
+          perPage: response.data!.perPage,
+        );
+
+        return ApiResponse<PaginatedResponse<Property>>(
+          success: true,
+          data: paginatedResponse,
+          message: response.message,
+        );
+      } else {
+        return ApiResponse<PaginatedResponse<Property>>(
+          success: false,
+          message: response.message,
+          errors: response.errors,
+        );
+      }
+    } catch (e) {
+      return ApiResponse<PaginatedResponse<Property>>(
+        success: false,
+        message: 'Failed to get host properties: ${e.toString()}',
+      );
+    }
+  }
+
   @override
   Future<ApiResponse<PaginatedResponse<Property>>> searchProperties({
     required String query,

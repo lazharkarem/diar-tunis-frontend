@@ -201,6 +201,8 @@ class ApiService {
     T Function(Map<String, dynamic>)? fromJson,
   ) {
     final responseData = response.data;
+    final statusCode = response.statusCode;
+    final headers = response.headers.map;
 
     if (responseData is Map<String, dynamic>) {
       final success = responseData['success'] ?? false;
@@ -220,22 +222,38 @@ class ApiService {
           data = responseData['data'] as T?;
         }
 
-        return ApiResponse<T>(success: true, data: data, message: message);
+        return ApiResponse<T>(
+          success: true, 
+          data: data, 
+          message: message,
+          statusCode: statusCode,
+          headers: headers,
+        );
       } else {
         return ApiResponse<T>(
           success: false,
           message: message,
           errors: responseData['errors'],
+          statusCode: statusCode,
+          headers: headers,
         );
       }
     }
 
-    return ApiResponse<T>(success: false, message: 'Invalid response format');
+    return ApiResponse<T>(
+      success: false, 
+      message: 'Invalid response format',
+      statusCode: statusCode,
+      headers: headers,
+    );
   }
 
   ApiResponse<T> _handleError<T>(DioException error) {
     String message = 'An error occurred';
     Map<String, dynamic>? errors;
+    int? statusCode;
+    Map<String, dynamic>? headers;
+    dynamic responseData;
 
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout) {
@@ -243,38 +261,56 @@ class ApiService {
     } else if (error.type == DioExceptionType.connectionError) {
       message = 'Connection error. Please check your internet connection.';
     } else if (error.response != null) {
-      final responseData = error.response!.data;
+      final response = error.response!;
+      statusCode = response.statusCode;
+      headers = response.headers.map;
+      responseData = response.data;
+
+      // Log the error response for debugging
+      print('API Error Response:');
+      print('Status Code: $statusCode');
+      print('Headers: $headers');
+      print('Response Data: $responseData');
 
       if (responseData is Map<String, dynamic>) {
         message = responseData['message'] ?? 'Server error';
         errors = responseData['errors'];
-      } else {
-        switch (error.response!.statusCode) {
-          case 400:
-            message = 'Bad request';
-            break;
-          case 401:
-            message = 'Unauthorized. Please login again.';
-            break;
-          case 403:
-            message = 'Access forbidden';
-            break;
-          case 404:
-            message = 'Resource not found';
-            break;
-          case 422:
-            message = 'Validation error';
-            break;
-          case 500:
-            message = 'Server error. Please try again later.';
-            break;
-          default:
-            message = 'An error occurred (${error.response!.statusCode})';
+        
+        // Handle common HTTP status codes
+        if (statusCode == 401) {
+          message = 'Authentication required. Please log in again.';
+          // Clear any invalid token
+          clearToken();
+        } else if (statusCode == 403) {
+          message = 'You do not have permission to access this resource.';
+        } else if (statusCode == 404) {
+          message = 'The requested resource was not found.';
+        } else if (statusCode == 500) {
+          message = 'An internal server error occurred.';
+        }
+      } else if (responseData != null) {
+        // Handle non-JSON responses (like HTML)
+        if (responseData is String && responseData.contains('<!DOCTYPE html>')) {
+          message = 'Received HTML response. This usually indicates a server-side error or authentication issue.';
+        } else {
+          message = 'Unexpected response format: ${responseData.runtimeType}';
         }
       }
     }
 
-    return ApiResponse<T>(success: false, message: message, errors: errors);
+    // Log the final error message
+    print('Final error message: $message');
+    if (errors != null) {
+      print('Error details: $errors');
+    }
+
+    return ApiResponse<T>(
+      success: false, 
+      message: message, 
+      errors: errors,
+      statusCode: statusCode,
+      headers: headers,
+    );
   }
 }
 
@@ -283,25 +319,48 @@ class ApiResponse<T> {
   final T? data;
   final String message;
   final Map<String, dynamic>? errors;
+  final int? statusCode;
+  final Map<String, dynamic>? headers;
 
   ApiResponse({
     required this.success,
     this.data,
     required this.message,
     this.errors,
+    this.statusCode,
+    this.headers,
   });
 
   // Factory constructor for success responses
-  factory ApiResponse.success({T? data, String message = ''}) {
-    return ApiResponse<T>(success: true, data: data, message: message);
+  factory ApiResponse.success({
+    T? data, 
+    String message = '',
+    int? statusCode,
+    Map<String, dynamic>? headers,
+  }) {
+    return ApiResponse<T>(
+      success: true, 
+      data: data, 
+      message: message,
+      statusCode: statusCode,
+      headers: headers,
+    );
   }
 
   // Factory constructor for error responses
   factory ApiResponse.error({
     String message = 'An error occurred',
     Map<String, dynamic>? errors,
+    int? statusCode,
+    Map<String, dynamic>? headers,
   }) {
-    return ApiResponse<T>(success: false, message: message, errors: errors);
+    return ApiResponse<T>(
+      success: false,
+      message: message,
+      errors: errors,
+      statusCode: statusCode,
+      headers: headers,
+    );
   }
 
   bool get isSuccess => success;

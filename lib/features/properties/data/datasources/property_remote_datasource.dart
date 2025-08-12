@@ -44,24 +44,61 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
     int? guests,
   }) async {
     try {
+      print('Fetching properties with params: page=$page, perPage=$perPage, search=$search, city=$city, type=$type, minPrice=$minPrice, maxPrice=$maxPrice, guests=$guests');
+      
+      // First, check if we have a valid token
+      final token = await _apiService.getToken();
+      print('Current auth token: ${token != null ? 'Token exists' : 'No token found'}');
+      
+      if (token == null) {
+        return ApiResponse<PaginatedResponse<PropertyModel>>(
+          success: false,
+          message: 'No authentication token found. Please log in again.',
+          statusCode: 401,
+        );
+      }
+      
+      // Log token prefix for debugging (don't log the full token for security)
+      if (token.length > 10) {
+        print('Token prefix: ${token.substring(0, 10)}...');
+      }
+      
+      print('Making API request to /host/properties...');
+      final stopwatch = Stopwatch()..start();
+      
       final response = await _apiService.get<Map<String, dynamic>>(
         '/host/properties',
         queryParameters: <String, dynamic>{
           'page': page,
           'per_page': perPage,
-          if (search != null && search.isNotEmpty) 'search': search,
+          if (search?.isNotEmpty ?? false) 'search': search,
           if (city != null && city.isNotEmpty) 'city': city,
           if (type != null && type.isNotEmpty) 'type': type,
           if (minPrice != null) 'min_price': minPrice,
           if (maxPrice != null) 'max_price': maxPrice,
           if (guests != null) 'guests': guests,
+          // Add a timestamp to prevent caching
+          '_': DateTime.now().millisecondsSinceEpoch,
         },
       );
+      
+      stopwatch.stop();
+      print('API request completed in ${stopwatch.elapsedMilliseconds}ms');
 
       if (!response.isSuccess) {
+        print('API Error: ${response.message}');
+        print('Status code: ${response.statusCode}');
+        print('Headers: ${response.headers}');
+        
+        // If unauthorized, print more details
+        if (response.statusCode == 401) {
+          print('Unauthorized - Please check if the user is logged in and the token is valid');
+        }
+        
         return ApiResponse<PaginatedResponse<PropertyModel>>(
           success: false,
           message: response.message ?? 'Failed to fetch properties',
+          statusCode: response.statusCode,
         );
       }
 
@@ -71,18 +108,34 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
       
       // Handle null response data
       if (responseData == null) {
+        print('Error: No data received from server');
         return ApiResponse<PaginatedResponse<PropertyModel>>(
           success: false,
           message: 'No data received from server',
         );
       }
       
+      // Log all top-level keys in the response
+      print('Response keys: ${responseData.keys}');
+      
       // Check if the response has a 'data' field
       if (responseData['data'] == null) {
-        return ApiResponse<PaginatedResponse<PropertyModel>>(
-          success: false,
-          message: 'Invalid response format: missing data field',
-        );
+        print('Error: Invalid response format - missing data field');
+        print('Available keys: ${responseData.keys}');
+        
+        // If the response has a different structure, try to handle it
+        if (responseData['properties'] != null) {
+          print('Found properties key in response');
+          responseData['data'] = responseData['properties'];
+        } else if (responseData is List) {
+          print('Response is a direct list, wrapping in data field');
+          responseData['data'] = responseData;
+        } else {
+          return ApiResponse<PaginatedResponse<PropertyModel>>(
+            success: false,
+            message: 'Invalid response format: missing data field',
+          );
+        }
       }
 
       // Handle the case where the response might be a list

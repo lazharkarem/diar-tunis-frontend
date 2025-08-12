@@ -1,3 +1,4 @@
+import 'package:diar_tunis/features/admin/domain/entities/property.dart';
 import 'package:diar_tunis/features/shared/data/models/user_model.dart';
 import 'package:equatable/equatable.dart';
 
@@ -46,7 +47,33 @@ class PropertyModel extends Equatable {
     required this.updatedAt,
   });
 
+  String? get thumbnailUrl {
+    if (images.isEmpty) return null;
+
+    // First try to find a thumbnail
+    final thumbnail = images.firstWhere(
+      (img) => img.isThumbnail || img.isPrimary,
+      orElse: () => images.first,
+    );
+
+    return thumbnail.imageUrl;
+  }
+
   factory PropertyModel.fromJson(Map<String, dynamic> json) {
+     // Parse images
+    final images =
+        (json['images'] as List<dynamic>?)
+            ?.map(
+              (img) => PropertyImageModel.fromJson(
+                img is Map<String, dynamic>
+                    ? img
+                    : {
+                        'image_url': img,
+                      }, // Handle case where images is a list of strings
+              ),
+            )
+            .toList() ??
+        [];
     return PropertyModel(
       id: json['id'],
       userId: json['user_id'],
@@ -62,20 +89,24 @@ class PropertyModel extends Equatable {
       latitude: json['latitude']?.toDouble(),
       longitude: json['longitude']?.toDouble(),
       status: json['status'],
-      isFeatured: json['is_featured'] ?? false,
-      host: json['user'] != null ? UserModel.fromJson(json['user']) : null,
+      isFeatured: json['is_featured'] == true || json['is_featured'] == 1,
+      host: json['host'] != null
+          ? UserModel.fromJson(
+              json['host'] is Map<String, dynamic> ? json['host'] : {},
+            )
+          : null,
       amenities:
           (json['amenities'] as List<dynamic>?)
-              ?.map((amenity) => PropertyAmenityModel.fromJson(amenity))
+              ?.map((a) => PropertyAmenityModel.fromJson(a))
               .toList() ??
           [],
-      images:
-          (json['images'] as List<dynamic>?)
-              ?.map((image) => PropertyImageModel.fromJson(image))
-              .toList() ??
-          [],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      images: images,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at']) ?? DateTime.now()
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at']) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 
@@ -108,6 +139,32 @@ class PropertyModel extends Equatable {
       images.firstWhere((img) => img.isPrimary, orElse: () => images.first);
 
   String get fullAddress => '$address, $city, $state, $country';
+
+  Property toDomain() {
+    return Property(
+      id: id.toString(),
+      title: title,
+      description: description,
+      address: address,
+      city: city,
+      state: state,
+      latitude: latitude ?? 0.0,
+      longitude: longitude ?? 0.0,
+      area: 0.0, // Model doesn't have area, default to 0.0
+      type: type,
+      maxGuests: maxGuests,
+      bedrooms: 0, // Model doesn't have bedrooms, default to 0
+      beds: 0, // Model doesn't have beds, default to 0
+      bathrooms: 0, // Model doesn't have bathrooms, default to 0
+      pricePerNight: pricePerNight,
+      amenities: amenities.map((a) => a.name).toList(),
+      status: status,
+      hostId: host?.id.toString(),
+      host: null, // Host entity conversion can be added if needed
+      createdAt: createdAt,
+      images: images.map((i) => i.toDomain()).toList(),
+    );
+  }
 
   bool get isPending => status == 'pending';
   bool get isApproved => status == 'approved';
@@ -162,21 +219,34 @@ class PropertyImageModel extends Equatable {
   final int propertyId;
   final String imageUrl;
   final bool isPrimary;
+  final bool isThumbnail;
 
   const PropertyImageModel({
     required this.id,
     required this.propertyId,
     required this.imageUrl,
     required this.isPrimary,
+     this.isThumbnail = false,
   });
 
   factory PropertyImageModel.fromJson(Map<String, dynamic> json) {
     return PropertyImageModel(
-      id: json['id'],
-      propertyId: json['property_id'],
-      imageUrl: json['image_url'],
-      isPrimary: json['is_primary'] ?? false,
+      id: json['id'] as int? ?? 0,
+      propertyId: json['property_id'] as int? ?? 0,
+      imageUrl: _parseImageUrl(json),
+      isPrimary: json['is_primary'] == true || json['is_primary'] == 1,
+      isThumbnail: json['is_thumbnail'] == true || json['is_thumbnail'] == 1,
     );
+  }
+
+
+    // Helper method to parse image URL from different formats
+  static String _parseImageUrl(Map<String, dynamic> json) {
+    final imageUrl = json['image_url'];
+    if (imageUrl is String) {
+      return imageUrl;
+    }
+    return '';
   }
 
   Map<String, dynamic> toJson() {
@@ -185,9 +255,17 @@ class PropertyImageModel extends Equatable {
       'property_id': propertyId,
       'image_url': imageUrl,
       'is_primary': isPrimary,
+      'is_thumbnail': isThumbnail,
     };
   }
 
+  PropertyImage toDomain() {
+    return PropertyImage(
+      imageUrl: imageUrl,
+      isPrimary: isPrimary,
+    );
+  }
+
   @override
-  List<Object?> get props => [id, propertyId, imageUrl, isPrimary];
+  List<Object?> get props => [id, propertyId, imageUrl, isPrimary, isThumbnail];
 }

@@ -1,12 +1,14 @@
-import 'package:diar_tunis/app/themes/colors.dart';
-import 'package:diar_tunis/app/themes/text_styles.dart';
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:diar_tunis/app/themes/colors.dart' as app_colors;
+import 'package:diar_tunis/app/themes/text_styles.dart' as app_styles;
 import 'package:diar_tunis/features/admin/domain/entities/property.dart';
 import 'package:diar_tunis/features/host/presentation/providers/host_property_provider.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/host_navigation_wrapper.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/host_stats_card.dart';
 import 'package:diar_tunis/features/host/presentation/widgets/property_card.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class HostDashboardPage extends StatefulWidget {
   const HostDashboardPage({super.key});
@@ -106,8 +108,8 @@ class _HostDashboardPageState extends State<HostDashboardPage>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary,
-            AppColors.primaryLight,
+            app_colors.AppColors.primary,
+            app_colors.AppColors.primaryLight,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -145,7 +147,7 @@ class _HostDashboardPageState extends State<HostDashboardPage>
                   children: [
                     Text(
                       'Welcome back!',
-                      style: AppTextStyles.h3.copyWith(
+                      style: app_styles.AppTextStyles.h3.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -186,15 +188,15 @@ class _HostDashboardPageState extends State<HostDashboardPage>
       children: [
         Text(
           value,
-          style: AppTextStyles.h4.copyWith(
+          style: app_styles.AppTextStyles.h4.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           label,
-          style: AppTextStyles.caption.copyWith(
-            color: Colors.white.withValues(alpha: 0.8),
+          style: app_styles.AppTextStyles.caption.copyWith(
+            color: Colors.white.withOpacity(0.8),
           ),
         ),
       ],
@@ -210,7 +212,7 @@ class _HostDashboardPageState extends State<HostDashboardPage>
           children: [
             Text(
               'Performance Overview',
-              style: AppTextStyles.h4.copyWith(
+              style: app_styles.AppTextStyles.h4.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -283,7 +285,7 @@ class _HostDashboardPageState extends State<HostDashboardPage>
       children: [
         Text(
           'Quick Actions',
-          style: AppTextStyles.h4.copyWith(
+          style: app_styles.AppTextStyles.h4.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -327,7 +329,7 @@ class _HostDashboardPageState extends State<HostDashboardPage>
               context,
               'Messages',
               Icons.message_outlined,
-              AppColors.info,
+              app_colors.AppColors.info,
               () {
                 // Navigate to messages
               },
@@ -347,11 +349,11 @@ class _HostDashboardPageState extends State<HostDashboardPage>
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: app_colors.AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: app_colors.AppColors.shadowLight,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -440,7 +442,7 @@ class _HostDashboardPageState extends State<HostDashboardPage>
       children: [
         Text(
           'Your Properties',
-          style: AppTextStyles.h4.copyWith(
+          style: app_styles.AppTextStyles.h4.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -471,7 +473,7 @@ class _HostDashboardPageState extends State<HostDashboardPage>
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryLight],
+          colors: [AppColors.primary, app_colors.AppColors.primaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

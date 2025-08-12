@@ -10,8 +10,12 @@ class PropertyImageModel extends PropertyImage {
     super.isPrimary = false,
   });
 
-  factory PropertyImageModel.fromJson(Map<String, dynamic> json) =>
-      _$PropertyImageModelFromJson(json);
+  factory PropertyImageModel.fromJson(Map<String, dynamic> json) {
+    return PropertyImageModel(
+      imageUrl: json['image_url'] as String? ?? '',
+      isPrimary: json['is_primary'] as bool? ?? false,
+    );
+  }
 
   Map<String, dynamic> toJson() => _$PropertyImageModelToJson(this);
 
